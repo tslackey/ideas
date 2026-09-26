@@ -43,12 +43,13 @@ That is the whole pattern: one folder, one catalog entry.
 ## Layout
 
 ```
-index.html              Catalog (the site home)
-css/site.css            Homepage styles
-css/idea.css            Shared bar for individual toys
-js/catalog.js           The list of ideas
-js/home.js              Renders the catalog
-ideas/<slug>/index.html One self-contained toy per folder
+index.html                 Catalog (the site home)
+css/site.css               Homepage styles
+css/idea.css               Shared bar for individual toys
+js/catalog.js              The list of ideas
+js/home.js                 Renders the catalog
+ideas/<slug>/index.html    One self-contained toy per folder
+.github/workflows/pages.yml  GitHub Pages deploy
 ```
 
 ## Local preview
@@ -61,6 +62,17 @@ python3 -m http.server 8080
 
 Then open `http://localhost:8080`. Opening `index.html` as a file also works.
 
-## Hosting
+## GitHub Pages
 
-Point GitHub Pages at the repository root. The homepage is `index.html`; toys live at `/ideas/<slug>/`.
+The site is plain static files at the repo root. A workflow in `.github/workflows/pages.yml` uploads those files and deploys them with `actions/upload-pages-artifact` and `actions/deploy-pages`.
+
+There is no build step. Pull requests upload a Pages artifact so the workflow can be checked; a push to `main` is what publishes.
+
+One-time repo settings (Scott):
+
+1. **Settings → Pages → Source:** GitHub Actions (not “Deploy from a branch”).
+2. Allow the `github-pages` environment if GitHub asks. The first successful deploy to `main` publishes the site, usually at `https://<user>.github.io/ideas/`.
+
+## Hosting elsewhere
+
+Any static host works. The homepage is `index.html`; toys live at `/ideas/<slug>/`.

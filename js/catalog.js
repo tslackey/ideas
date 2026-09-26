@@ -10,17 +10,17 @@
  */
 window.IDEAS = [
   {
+    slug: "canvas-guest",
+    title: "Canvas Guest",
+    blurb: "A live HTML card drawn into a canvas stage. Tilt it, smash it into tiles, then put the pieces back.",
+    date: "2026-09-26",
+    tag: "html-in-canvas",
+  },
+  {
     slug: "palette-shuffle",
     title: "Palette Shuffle",
     blurb: "Five related colors, new every click. Copy a hex if one of them sticks.",
     date: "2026-09-26",
     tag: "color",
-  },
-  {
-    slug: "ripple-pond",
-    title: "Ripple Pond",
-    blurb: "Tap the dark water and watch rings travel outward. A quiet canvas toy.",
-    date: "2026-09-26",
-    tag: "motion",
   },
 ];

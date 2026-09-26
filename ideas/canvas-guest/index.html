@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b100f" />
+    <title>Canvas Guest · ideas</title>
+    <meta
+      name="description"
+      content="A live HTML card drawn into a canvas stage. Tilt it, smash it, mend it."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;600;650&family=Fraunces:opsz,wght@9..144,560;9..144,620&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../css/idea.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #0b100f;
+        color: #e7efe9;
+        font-family: var(--sans);
+      }
+
+      .idea-bar {
+        color: #e7efe9;
+      }
+
+      .stage-frame {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .guest {
+        width: min(22rem, calc(100vw - 2.6rem));
+        padding: 1.25rem 1.3rem 1.15rem;
+        border-radius: 18px;
+        background: #f4eadc;
+        color: #241c14;
+        box-shadow:
+          0 24px 50px -28px rgba(0, 0, 0, 0.55),
+          0 0 0 1px rgba(36, 28, 20, 0.08);
+        transform-origin: center center;
+      }
+
+      .guest.overlay {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 2;
+        translate: -50% -50%;
+      }
+
+      .guest.is-hidden {
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .guest-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 1rem;
+        color: #7a6d5d;
+        font-size: 0.72rem;
+        font-weight: 650;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .guest-live {
+        color: var(--accent, #c24d2c);
+      }
+
+      .guest h1 {
+        margin: 0 0 0.55rem;
+        font-family: var(--serif);
+        font-size: 2.05rem;
+        font-weight: 620;
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+        outline: none;
+      }
+
+      .guest h1:focus-visible {
+        outline: 2px solid var(--accent, #c24d2c);
+        outline-offset: 4px;
+      }
+
+      .guest p {
+        margin: 0 0 1.15rem;
+        color: #5c5146;
+        font-size: 0.98rem;
+        line-height: 1.5;
+      }
+
+      .guest code {
+        font-size: 0.9em;
+        padding: 0.05em 0.28em;
+        border-radius: 4px;
+        background: rgba(36, 28, 20, 0.06);
+      }
+
+      .chips {
+        display: flex;
+        gap: 0.45rem;
+        margin-bottom: 0.95rem;
+      }
+
+      .chip {
+        width: 1.15rem;
+        height: 1.15rem;
+        border: 0;
+        border-radius: 999px;
+        padding: 0;
+        cursor: pointer;
+        box-shadow: 0 0 0 2px #f4eadc, 0 0 0 3px rgba(36, 28, 20, 0.18);
+      }
+
+      .chip.is-on {
+        box-shadow: 0 0 0 2px #f4eadc, 0 0 0 3px var(--accent, #c24d2c);
+      }
+
+      .mood {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.7rem;
+        align-items: center;
+        margin-bottom: 1.15rem;
+        color: #7a6d5d;
+        font-size: 0.75rem;
+        font-weight: 650;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .mood input {
+        width: 100%;
+        accent-color: var(--accent, #c24d2c);
+      }
+
+      .actions {
+        display: flex;
+        gap: 0.55rem;
+      }
+
+      .actions button {
+        appearance: none;
+        flex: 1;
+        border: 0;
+        border-radius: 999px;
+        padding: 0.62rem 0.8rem;
+        background: #241c14;
+        color: #f4eadc;
+        font: inherit;
+        font-size: 0.88rem;
+        font-weight: 650;
+        cursor: pointer;
+      }
+
+      .actions button.ghost {
+        background: transparent;
+        color: #241c14;
+        box-shadow: inset 0 0 0 1.5px rgba(36, 28, 20, 0.22);
+      }
+
+      .actions button:disabled {
+        opacity: 0.38;
+        cursor: default;
+      }
+
+      .caption {
+        position: absolute;
+        left: 1.1rem;
+        right: 1.1rem;
+        bottom: 1rem;
+        z-index: 3;
+        margin: 0;
+        color: rgba(231, 239, 233, 0.62);
+        font-size: 0.78rem;
+        letter-spacing: 0.03em;
+        text-align: center;
+        pointer-events: none;
+      }
+
+      @media (max-width: 540px) {
+        .guest h1 {
+          font-size: 1.7rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="idea-bar">
+      <a href="../../">← ideas</a>
+      <span class="toy-name">Canvas Guest</span>
+    </nav>
+
+    <div class="stage-frame" id="frame">
+      <canvas id="stage" layoutsubtree>
+        <article class="guest" id="guest">
+          <div class="guest-top">
+            <span>Specimen 01</span>
+            <span class="guest-live">Live HTML</span>
+          </div>
+          <h1 contenteditable="true" spellcheck="false">Canvas Guest</h1>
+          <p>
+            A real HTML card, painted into a <code>&lt;canvas&gt;</code> stage.
+            Tilt it. Smash it into tiles. Mend it when you want it back.
+          </p>
+          <div class="chips" id="chips" role="group" aria-label="Accent color">
+            <button class="chip is-on" type="button" data-color="#c24d2c" style="background:#c24d2c" aria-label="Rust"></button>
+            <button class="chip" type="button" data-color="#3f5c47" style="background:#3f5c47" aria-label="Sage"></button>
+            <button class="chip" type="button" data-color="#2f5d8c" style="background:#2f5d8c" aria-label="Ink blue"></button>
+            <button class="chip" type="button" data-color="#8a3d7a" style="background:#8a3d7a" aria-label="Plum"></button>
+          </div>
+          <label class="mood">
+            Mood
+            <input id="mood" type="range" min="0" max="100" value="42" />
+          </label>
+          <div class="actions">
+            <button id="smash" type="button">Smash</button>
+            <button id="mend" class="ghost" type="button" disabled>Mend</button>
+          </div>
+        </article>
+      </canvas>
+      <p class="caption" id="caption"></p>
+    </div>
+
+    <script>
+      (function () {
+        const frame = document.getElementById("frame");
+        const canvas = document.getElementById("stage");
+        const guest = document.getElementById("guest");
+        const caption = document.getElementById("caption");
+        const smashBtn = document.getElementById("smash");
+        const mendBtn = document.getElementById("mend");
+        const mood = document.getElementById("mood");
+        const ctx = canvas.getContext("2d");
+        const native = typeof ctx.drawElementImage === "function";
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        const pointer = { x: 0.5, y: 0.46 };
+        const dust = Array.from({ length: 36 }, function () {
+          return {
+            x: Math.random(),
+            y: Math.random(),
+            r: 0.4 + Math.random() * 1.1,
+            s: 0.04 + Math.random() * 0.08,
+          };
+        });
+
+        let width = 0;
+        let height = 0;
+        let tiles = [];
+        let snapshot = null;
+        let smashed = false;
+        let mending = false;
+        let last = performance.now();
+
+        if (!native) {
+          frame.appendChild(guest);
+          guest.classList.add("overlay");
+        }
+
+        caption.textContent = native
+          ? "Native HTML-in-Canvas · drawElementImage is live. Space smashes the card."
+          : "Fallback stage · live HTML overlay. Enable chrome://flags/#canvas-draw-element for the native API. Space smashes the card.";
+
+        function resize() {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          width = frame.clientWidth;
+          height = frame.clientHeight;
+          canvas.width = Math.floor(width * dpr);
+          canvas.height = Math.floor(height * dpr);
+          canvas.style.width = width + "px";
+          canvas.style.height = height + "px";
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function paperColor() {
+          const t = Number(mood.value) / 100;
+          const r = Math.round(244 - t * 18);
+          const g = Math.round(234 - t * 36);
+          const b = Math.round(220 - t * 8);
+          return "rgb(" + r + ", " + g + ", " + b + ")";
+        }
+
+        function tilt() {
+          const amount = reduceMotion ? 0.25 : 1;
+          return {
+            rx: (0.5 - pointer.y) * 14 * amount,
+            ry: (pointer.x - 0.5) * 18 * amount,
+          };
+        }
+
+        function guestSize() {
+          return { w: guest.offsetWidth, h: guest.offsetHeight };
+        }
+
+        function applyOverlayTilt() {
+          if (!guest.classList.contains("overlay") || smashed) return;
+          const t = tilt();
+          guest.style.transform =
+            "perspective(1100px) rotateX(" + t.rx + "deg) rotateY(" + t.ry + "deg)";
+        }
+
+        function drawStage() {
+          const g = ctx.createRadialGradient(
+            width * pointer.x,
+            height * pointer.y,
+            40,
+            width * 0.5,
+            height * 0.5,
+            Math.max(width, height) * 0.78
+          );
+          g.addColorStop(0, "#182421");
+          g.addColorStop(1, "#0b100f");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, width, height);
+
+          ctx.save();
+          ctx.strokeStyle = "rgba(231, 239, 233, 0.045)";
+          ctx.lineWidth = 1;
+          const step = 48;
+          for (let x = 0; x <= width; x += step) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, height);
+            ctx.stroke();
+          }
+          for (let y = 0; y <= height; y += step) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(width, y);
+            ctx.stroke();
+          }
+          ctx.restore();
+
+          dust.forEach(function (dot) {
+            ctx.beginPath();
+            ctx.fillStyle = "rgba(231, 239, 233, 0.16)";
+            ctx.arc(dot.x * width, dot.y * height, dot.r, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        }
+
+        function drawShadow() {
+          const size = guestSize();
+          const t = tilt();
+          const cx = width / 2 + t.ry * 1.6;
+          const cy = height / 2 + size.h * 0.42 + t.rx * 1.2;
+          ctx.save();
+          ctx.fillStyle = "rgba(0, 0, 0, 0.34)";
+          ctx.filter = "blur(18px)";
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, size.w * 0.42, 16, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function drawGuestNative() {
+          const size = guestSize();
+          const t = tilt();
+          const skewY = (t.rx / 14) * 0.08;
+          const skewX = (t.ry / 18) * 0.1;
+          const scaleY = 1 - Math.abs(t.rx) * 0.004;
+          ctx.save();
+          ctx.translate(width / 2, height / 2);
+          ctx.transform(1, skewY, skewX, scaleY, 0, 0);
+          ctx.translate(-size.w / 2, -size.h / 2);
+          const matrix = ctx.drawElementImage(guest, 0, 0);
+          ctx.restore();
+          if (matrix) guest.style.transform = matrix.toString();
+        }
+
+        function copyStyles(from, to) {
+          const computed = getComputedStyle(from);
+          const keep = [
+            "display", "box-sizing", "width", "height", "margin", "padding",
+            "border", "border-radius", "background", "background-color", "color",
+            "font", "font-family", "font-size", "font-weight", "letter-spacing",
+            "line-height", "text-align", "text-transform", "box-shadow",
+            "align-items", "justify-content", "flex-direction", "gap",
+            "flex-wrap", "white-space", "appearance", "accent-color",
+          ];
+          to.style.cssText = keep
+            .map(function (prop) {
+              return prop + ":" + computed.getPropertyValue(prop);
+            })
+            .join(";");
+          const fromKids = from.children;
+          const toKids = to.children;
+          for (let i = 0; i < fromKids.length; i += 1) {
+            copyStyles(fromKids[i], toKids[i]);
+          }
+        }
+
+        function serializeXHTML(node) {
+          const voids = {
+            input: true,
+            img: true,
+            br: true,
+            hr: true,
+            meta: true,
+            link: true,
+          };
+          if (node.nodeType === Node.TEXT_NODE) {
+            return node.textContent
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;");
+          }
+          if (node.nodeType !== Node.ELEMENT_NODE) return "";
+          const tag = node.tagName.toLowerCase();
+          let attrs = "";
+          for (let i = 0; i < node.attributes.length; i += 1) {
+            const attr = node.attributes[i];
+            attrs +=
+              " " +
+              attr.name +
+              '="' +
+              attr.value.replace(/&/g, "&amp;").replace(/"/g, "&quot;") +
+              '"';
+          }
+          if (tag === "article" && !node.getAttribute("xmlns")) {
+            attrs += ' xmlns="http://www.w3.org/1999/xhtml"';
+          }
+          if (voids[tag]) return "<" + tag + attrs + " />";
+          let inner = "";
+          for (let i = 0; i < node.childNodes.length; i += 1) {
+            inner += serializeXHTML(node.childNodes[i]);
+          }
+          return "<" + tag + attrs + ">" + inner + "</" + tag + ">";
+        }
+
+        function rasterize() {
+          const size = guestSize();
+          const clone = guest.cloneNode(true);
+          copyStyles(guest, clone);
+          clone.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+          clone.style.margin = "0";
+          clone.style.position = "static";
+          clone.style.transform = "none";
+          clone.style.visibility = "visible";
+          const svg =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="' +
+            size.w +
+            '" height="' +
+            size.h +
+            '"><foreignObject width="100%" height="100%">' +
+            serializeXHTML(clone) +
+            "</foreignObject></svg>";
+          const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          return new Promise(function (resolve, reject) {
+            const img = new Image();
+            img.onload = function () {
+              const off = document.createElement("canvas");
+              off.width = Math.max(1, Math.round(size.w));
+              off.height = Math.max(1, Math.round(size.h));
+              off.getContext("2d").drawImage(img, 0, 0);
+              URL.revokeObjectURL(url);
+              resolve(off);
+            };
+            img.onerror = function () {
+              URL.revokeObjectURL(url);
+              reject(new Error("rasterize failed"));
+            };
+            img.src = url;
+          });
+        }
+
+        function spawnTiles(image) {
+          const cols = 8;
+          const rows = 6;
+          const tw = image.width / cols;
+          const th = image.height / rows;
+          const originX = (width - image.width) / 2;
+          const originY = (height - image.height) / 2;
+          tiles = [];
+          for (let y = 0; y < rows; y += 1) {
+            for (let x = 0; x < cols; x += 1) {
+              tiles.push({
+                sx: x * tw,
+                sy: y * th,
+                tw: tw,
+                th: th,
+                x: originX + x * tw,
+                y: originY + y * th,
+                homeX: originX + x * tw,
+                homeY: originY + y * th,
+                vx: (x - (cols - 1) / 2) * 2.4 + (Math.random() - 0.5) * 6,
+                vy: -6 - Math.random() * 8 + (y - rows / 2) * 0.8,
+                rot: (Math.random() - 0.5) * 0.4,
+                vr: (Math.random() - 0.5) * 0.12,
+              });
+            }
+          }
+        }
+
+        function stepTiles(dt) {
+          const gravity = mending ? 0 : 0.42;
+          tiles.forEach(function (tile) {
+            if (mending) {
+              tile.x += (tile.homeX - tile.x) * Math.min(1, dt * 7);
+              tile.y += (tile.homeY - tile.y) * Math.min(1, dt * 7);
+              tile.rot += (0 - tile.rot) * Math.min(1, dt * 8);
+              tile.vx = 0;
+              tile.vy = 0;
+              return;
+            }
+            tile.vy += gravity * dt * 60;
+            tile.x += tile.vx * dt * 60;
+            tile.y += tile.vy * dt * 60;
+            tile.rot += tile.vr * dt * 60;
+            if (tile.x < -80 || tile.x > width + 40) tile.vx *= -0.72;
+            if (tile.y > height - tile.th - 18) {
+              tile.y = height - tile.th - 18;
+              tile.vy *= -0.38;
+              tile.vx *= 0.86;
+              tile.vr *= 0.8;
+            }
+          });
+        }
+
+        function drawTiles() {
+          if (!snapshot) return;
+          tiles.forEach(function (tile) {
+            ctx.save();
+            ctx.translate(tile.x + tile.tw / 2, tile.y + tile.th / 2);
+            ctx.rotate(tile.rot);
+            ctx.drawImage(
+              snapshot,
+              tile.sx,
+              tile.sy,
+              tile.tw,
+              tile.th,
+              -tile.tw / 2,
+              -tile.th / 2,
+              tile.tw,
+              tile.th
+            );
+            ctx.restore();
+          });
+        }
+
+        function paint() {
+          drawStage();
+          if (smashed) {
+            drawTiles();
+            return;
+          }
+          drawShadow();
+          if (native) drawGuestNative();
+          else applyOverlayTilt();
+        }
+
+        function tick(now) {
+          const dt = Math.min(0.033, (now - last) / 1000);
+          last = now;
+          dust.forEach(function (dot) {
+            dot.y += dot.s * dt;
+            if (dot.y > 1) {
+              dot.y = -0.02;
+              dot.x = Math.random();
+            }
+          });
+          if (smashed) stepTiles(dt);
+          if (mending) {
+            const done = tiles.every(function (tile) {
+              return Math.abs(tile.x - tile.homeX) < 0.6 && Math.abs(tile.y - tile.homeY) < 0.6;
+            });
+            if (done) finishMend();
+          }
+          paint();
+          if (native && canvas.requestPaint && !smashed) canvas.requestPaint();
+          requestAnimationFrame(tick);
+        }
+
+        async function smash() {
+          if (smashed || mending) return;
+          try {
+            snapshot = await rasterize();
+          } catch (err) {
+            caption.textContent = "Could not snapshot the card in this browser. Try Chrome or Firefox.";
+            return;
+          }
+          spawnTiles(snapshot);
+          smashed = true;
+          guest.classList.add("is-hidden");
+          smashBtn.disabled = true;
+          mendBtn.disabled = false;
+        }
+
+        function finishMend() {
+          smashed = false;
+          mending = false;
+          tiles = [];
+          snapshot = null;
+          guest.classList.remove("is-hidden");
+          smashBtn.disabled = false;
+          mendBtn.disabled = true;
+        }
+
+        function mend() {
+          if (!smashed || mending) return;
+          mending = true;
+          mendBtn.disabled = true;
+        }
+
+        function setAccent(color) {
+          guest.style.setProperty("--accent", color);
+          document.querySelectorAll(".chip").forEach(function (chip) {
+            chip.classList.toggle("is-on", chip.dataset.color === color);
+          });
+        }
+
+        document.getElementById("chips").addEventListener("click", function (event) {
+          const chip = event.target.closest(".chip");
+          if (!chip) return;
+          setAccent(chip.dataset.color);
+        });
+
+        mood.addEventListener("input", function () {
+          guest.style.background = paperColor();
+        });
+
+        smashBtn.addEventListener("click", smash);
+        mendBtn.addEventListener("click", mend);
+
+        window.addEventListener("pointermove", function (event) {
+          pointer.x = event.clientX / Math.max(1, width);
+          pointer.y = event.clientY / Math.max(1, height);
+        });
+
+        canvas.addEventListener("pointerdown", function (event) {
+          if (!smashed || mending) return;
+          const mx = event.clientX;
+          const my = event.clientY;
+          tiles.forEach(function (tile) {
+            const dx = tile.x + tile.tw / 2 - mx;
+            const dy = tile.y + tile.th / 2 - my;
+            const dist = Math.max(24, Math.hypot(dx, dy));
+            tile.vx += (dx / dist) * 10;
+            tile.vy += (dy / dist) * 10 - 3;
+          });
+        });
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key !== " " || event.target !== document.body) return;
+          event.preventDefault();
+          if (smashed) mend();
+          else smash();
+        });
+
+        window.addEventListener("resize", resize);
+        setAccent("#c24d2c");
+        guest.style.background = paperColor();
+        resize();
+        if (native && canvas.onpaint !== undefined) {
+          canvas.onpaint = paint;
+          if (canvas.requestPaint) canvas.requestPaint();
+        }
+        requestAnimationFrame(tick);
+      })();
+    </script>
+  </body>
+</html>
