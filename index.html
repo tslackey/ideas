@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f3eadf" />
+    <title>ideas</title>
+    <meta
+      name="description"
+      content="A small workshop of HTML, CSS, and JavaScript playthings."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,550;0,600;0,650;1,400&family=Fraunces:opsz,wght@9..144,500;9..144,560&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/site.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="masthead">
+        <a class="brand" href="./">
+          <span class="mark" aria-hidden="true">*</span>
+          <h1 class="site-title">ideas</h1>
+        </a>
+        <p class="lede">A workshop of small HTML, CSS, and JavaScript playthings.</p>
+      </header>
+
+      <section class="intro">
+        <p>
+          This is a living index, not a product. Each entry is a self-contained
+          toy you can open, poke at, and steal from. New ideas land as folders
+          and show up here.
+        </p>
+      </section>
+
+      <section class="feed" id="ideas" aria-label="Ideas">
+        <noscript>
+          <article class="idea">
+            <p class="idea-meta">
+              <time datetime="2026-09-26">Sep 26, 2026</time>
+              <span class="idea-tag">color</span>
+            </p>
+            <h2 class="idea-title">
+              <a href="ideas/palette-shuffle/">Palette Shuffle</a>
+            </h2>
+            <p class="idea-blurb">
+              Five related colors, new every click. Copy a hex if one of them sticks.
+            </p>
+            <p class="idea-more"><a href="ideas/palette-shuffle/">Open the toy</a></p>
+          </article>
+          <article class="idea">
+            <p class="idea-meta">
+              <time datetime="2026-09-26">Sep 26, 2026</time>
+              <span class="idea-tag">motion</span>
+            </p>
+            <h2 class="idea-title">
+              <a href="ideas/ripple-pond/">Ripple Pond</a>
+            </h2>
+            <p class="idea-blurb">
+              Tap the dark water and watch rings travel outward. A quiet canvas toy.
+            </p>
+            <p class="idea-more"><a href="ideas/ripple-pond/">Open the toy</a></p>
+          </article>
+        </noscript>
+      </section>
+
+      <footer class="colophon">
+        <p>Static site. No build step. Host it anywhere, including GitHub Pages.</p>
+        <p>To add a toy, drop a folder in <code>ideas/</code> and list it in <code>js/catalog.js</code>.</p>
+      </footer>
+    </div>
+    <script src="js/catalog.js"></script>
+    <script src="js/home.js"></script>
+  </body>
+</html>

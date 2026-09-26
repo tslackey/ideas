@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#071114" />
+    <title>Ripple Pond · ideas</title>
+    <meta name="description" content="Tap the dark water and watch rings travel outward." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;650&family=Fraunces:opsz,wght@9..144,560&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../css/idea.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #071114;
+        color: #d7e4df;
+        font-family: var(--sans);
+      }
+
+      .idea-bar {
+        color: #d7e4df;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        cursor: crosshair;
+      }
+
+      .hint {
+        position: fixed;
+        left: 50%;
+        bottom: 1.4rem;
+        margin: 0;
+        transform: translateX(-50%);
+        font-size: 0.84rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        opacity: 0.72;
+        pointer-events: none;
+        transition: opacity 500ms ease;
+      }
+
+      .hint.gone {
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="idea-bar">
+      <a href="../../">← ideas</a>
+      <span class="toy-name">Ripple Pond</span>
+    </nav>
+    <canvas id="pond" aria-label="Ripple pond. Click or tap to make ripples."></canvas>
+    <p class="hint" id="hint">Click or tap the water</p>
+
+    <script>
+      const canvas = document.getElementById("pond");
+      const hint = document.getElementById("hint");
+      const ctx = canvas.getContext("2d");
+      const ripples = [];
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let width = 0;
+      let height = 0;
+      let seeded = false;
+
+      function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function addRipple(x, y, hideHint) {
+        ripples.push({
+          x: x,
+          y: y,
+          r: 0,
+          width: 1.2 + Math.random() * 1.4,
+          hue: 168 + Math.random() * 36,
+          alpha: 0.7,
+          speed: reduceMotion ? 4.8 : 2.15 + Math.random() * 0.8,
+        });
+        if (hideHint !== false) {
+          hint.classList.add("gone");
+        }
+      }
+
+      function pointFromEvent(event) {
+        if (event.touches && event.touches[0]) {
+          return { x: event.touches[0].clientX, y: event.touches[0].clientY };
+        }
+        return { x: event.clientX, y: event.clientY };
+      }
+
+      function drawBackdrop() {
+        const wash = ctx.createRadialGradient(
+          width * 0.5,
+          height * 0.42,
+          20,
+          width * 0.5,
+          height * 0.5,
+          Math.max(width, height) * 0.72
+        );
+        wash.addColorStop(0, "rgba(18, 42, 46, 0.18)");
+        wash.addColorStop(1, "rgba(7, 17, 20, 0.28)");
+        ctx.fillStyle = wash;
+        ctx.fillRect(0, 0, width, height);
+      }
+
+      function tick() {
+        ctx.fillStyle = "rgba(7, 17, 20, 0.16)";
+        ctx.fillRect(0, 0, width, height);
+        drawBackdrop();
+
+        for (let i = ripples.length - 1; i >= 0; i -= 1) {
+          const ripple = ripples[i];
+          ripple.r += ripple.speed;
+          ripple.alpha *= reduceMotion ? 0.9 : 0.986;
+
+          ctx.beginPath();
+          ctx.arc(ripple.x, ripple.y, ripple.r, 0, Math.PI * 2);
+          ctx.strokeStyle = "hsla(" + ripple.hue + ", 42%, 68%, " + ripple.alpha + ")";
+          ctx.lineWidth = ripple.width;
+          ctx.stroke();
+
+          if (ripple.alpha < 0.02 || ripple.r > Math.max(width, height)) {
+            ripples.splice(i, 1);
+          }
+        }
+
+        requestAnimationFrame(tick);
+      }
+
+      function onPointer(event) {
+        const point = pointFromEvent(event);
+        addRipple(point.x, point.y);
+        if (!reduceMotion) {
+          addRipple(point.x + (Math.random() * 10 - 5), point.y + (Math.random() * 10 - 5));
+        }
+      }
+
+      window.addEventListener("resize", resize);
+      canvas.addEventListener("pointerdown", onPointer);
+      canvas.addEventListener("touchstart", function (event) {
+        event.preventDefault();
+      }, { passive: false });
+
+      resize();
+      ctx.fillStyle = "#071114";
+      ctx.fillRect(0, 0, width, height);
+
+      if (!seeded) {
+        addRipple(width * 0.5, height * 0.46, false);
+        seeded = true;
+      }
+
+      tick();
+    </script>
+  </body>
+</html>
