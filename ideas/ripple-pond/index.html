@@ -86,10 +86,10 @@
           x: x,
           y: y,
           r: 0,
-          width: 1.2 + Math.random() * 1.4,
-          hue: 168 + Math.random() * 36,
-          alpha: 0.7,
-          speed: reduceMotion ? 4.8 : 2.15 + Math.random() * 0.8,
+          width: 1.8 + Math.random() * 1.4,
+          hue: 162 + Math.random() * 42,
+          alpha: 0.92,
+          speed: reduceMotion ? 5.2 : 2.35 + Math.random() * 0.9,
         });
         if (hideHint !== false) {
           hint.classList.add("gone");
@@ -119,18 +119,18 @@
       }
 
       function tick() {
-        ctx.fillStyle = "rgba(7, 17, 20, 0.16)";
+        ctx.fillStyle = "rgba(7, 17, 20, 0.11)";
         ctx.fillRect(0, 0, width, height);
         drawBackdrop();
 
         for (let i = ripples.length - 1; i >= 0; i -= 1) {
           const ripple = ripples[i];
           ripple.r += ripple.speed;
-          ripple.alpha *= reduceMotion ? 0.9 : 0.986;
+          ripple.alpha *= reduceMotion ? 0.9 : 0.988;
 
           ctx.beginPath();
           ctx.arc(ripple.x, ripple.y, ripple.r, 0, Math.PI * 2);
-          ctx.strokeStyle = "hsla(" + ripple.hue + ", 42%, 68%, " + ripple.alpha + ")";
+          ctx.strokeStyle = "hsla(" + ripple.hue + ", 52%, 74%, " + ripple.alpha + ")";
           ctx.lineWidth = ripple.width;
           ctx.stroke();
 

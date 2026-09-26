@@ -24,8 +24,34 @@
       }
 
       .idea-bar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
         color: #fffaf3;
         text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
+      }
+
+      .idea-bar a {
+        justify-self: start;
+      }
+
+      .idea-bar .toy-name {
+        justify-self: end;
+      }
+
+      .idea-bar .hint {
+        justify-self: center;
+        margin: 0;
+        font-size: 0.78rem;
+        letter-spacing: 0.03em;
+        opacity: 0.82;
+        text-transform: none;
+        font-weight: 550;
+        position: static;
+        left: auto;
+        bottom: auto;
+        pointer-events: none;
+        text-shadow: 0 1px 10px rgba(0, 0, 0, 0.4);
       }
 
       .board {
@@ -66,16 +92,8 @@
         text-underline-offset: 0.16em;
       }
 
-      .hint {
-        position: fixed;
-        left: 1.1rem;
-        bottom: 1.1rem;
-        margin: 0;
-        font-size: 0.82rem;
-        letter-spacing: 0.04em;
-        opacity: 0.78;
-        pointer-events: none;
-        text-shadow: 0 1px 10px rgba(0, 0, 0, 0.4);
+      .hint-mobile {
+        display: none;
       }
 
       .toast {
@@ -108,12 +126,36 @@
           justify-content: center;
           padding: 0.85rem 1.1rem;
         }
+
+        .idea-bar {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .idea-bar .hint {
+          display: none;
+        }
+
+        .hint-mobile {
+          display: block;
+          position: fixed;
+          left: 50%;
+          bottom: 0.85rem;
+          margin: 0;
+          transform: translateX(-50%);
+          padding: 0.32rem 0.7rem;
+          border-radius: 999px;
+          background: rgba(36, 28, 20, 0.45);
+          font-size: 0.75rem;
+          letter-spacing: 0.03em;
+          pointer-events: none;
+        }
       }
     </style>
   </head>
   <body>
     <nav class="idea-bar">
       <a href="../../">← ideas</a>
+      <p class="hint">Click to shuffle · tap a hex to copy</p>
       <span class="toy-name">Palette Shuffle</span>
     </nav>
 
@@ -124,7 +166,7 @@
       <div class="swatch"><button class="hex" type="button">#000000</button></div>
       <div class="swatch"><button class="hex" type="button">#000000</button></div>
     </div>
-    <p class="hint">Click anywhere to shuffle · click a hex to copy</p>
+    <p class="hint-mobile">Click to shuffle · tap a hex to copy</p>
     <div class="toast" id="toast" role="status" aria-live="polite">Copied</div>
 
     <script>
