@@ -64,14 +64,17 @@ Then open `http://localhost:8080`. Opening `index.html` as a file also works.
 
 ## GitHub Pages
 
-The site is plain static files at the repo root. A workflow in `.github/workflows/pages.yml` uploads those files and deploys them with `actions/upload-pages-artifact` and `actions/deploy-pages`.
+The site is plain static files at the repo root. `.github/workflows/pages.yml` uploads that tree with `actions/upload-pages-artifact` and publishes it with `actions/deploy-pages`. There is no build step.
 
-There is no build step. Pull requests upload a Pages artifact so the workflow can be checked; a push to `main` is what publishes.
+Pull requests only package an artifact. A push to `main` (including after this PR merges) is what deploys.
 
 One-time repo settings (Scott):
 
-1. **Settings → Pages → Source:** GitHub Actions (not “Deploy from a branch”).
-2. Allow the `github-pages` environment if GitHub asks. The first successful deploy to `main` publishes the site, usually at `https://<user>.github.io/ideas/`.
+1. **Settings → Pages → Source:** GitHub Actions (not “Deploy from a branch”). Do this before or right after merge; until it is set, the deploy job cannot publish.
+2. **Settings → Actions → General → Workflow permissions:** Read and write permissions. The workflow already requests `pages: write` and `id-token: write`.
+3. Allow the **github-pages** environment if GitHub prompts on the first deploy.
+
+The first successful run on `main` publishes at `https://<user>.github.io/ideas/`.
 
 ## Hosting elsewhere
 
