@@ -1,0 +1,56 @@
+:root {
+  --ink: #241c14;
+  --paper: #f3eadf;
+  --accent: #c24d2c;
+  --serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  --sans: "Figtree", "Segoe UI", system-ui, sans-serif;
+}
+
+.idea-bar {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  pointer-events: none;
+}
+
+.idea-bar a,
+.idea-bar span {
+  pointer-events: auto;
+}
+
+.idea-bar a {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 650;
+}
+
+.idea-bar a:hover {
+  color: var(--accent);
+}
+
+.idea-bar .toy-name {
+  opacity: 0.72;
+  font-weight: 550;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}

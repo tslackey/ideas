@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#241c14" />
+    <title>Palette Shuffle · ideas</title>
+    <meta name="description" content="Five related colors, new every click." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;650&family=Fraunces:opsz,wght@9..144,560&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../css/idea.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #1a1511;
+        color: #fffaf3;
+        font-family: var(--sans);
+      }
+
+      .idea-bar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        color: #fffaf3;
+        text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
+      }
+
+      .idea-bar a {
+        justify-self: start;
+      }
+
+      .idea-bar .toy-name {
+        justify-self: end;
+      }
+
+      .idea-bar .hint {
+        justify-self: center;
+        margin: 0;
+        padding: 0.22rem 0.65rem;
+        border-radius: 999px;
+        background: rgba(36, 28, 20, 0.42);
+        font-size: 0.78rem;
+        letter-spacing: 0.03em;
+        text-transform: none;
+        font-weight: 550;
+        position: static;
+        left: auto;
+        bottom: auto;
+        pointer-events: none;
+        text-shadow: none;
+      }
+
+      .board {
+        display: flex;
+        min-height: 100%;
+        cursor: pointer;
+      }
+
+      .swatch {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 1.15rem 0.85rem 1.35rem;
+        min-width: 0;
+        transition: background-color 420ms ease;
+      }
+
+      .hex {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        padding: 0;
+        margin: 0;
+        font: inherit;
+        font-size: clamp(0.78rem, 1.8vw, 0.95rem);
+        font-weight: 650;
+        letter-spacing: 0.04em;
+        text-align: left;
+        cursor: pointer;
+        mix-blend-mode: plus-lighter;
+        filter: drop-shadow(0 1px 8px rgba(0, 0, 0, 0.28));
+      }
+
+      .hex:hover {
+        text-decoration: underline;
+        text-underline-offset: 0.16em;
+      }
+
+      .hint-mobile {
+        display: none;
+      }
+
+      .toast {
+        position: fixed;
+        right: 1.1rem;
+        bottom: 1.1rem;
+        padding: 0.4rem 0.7rem;
+        border-radius: 999px;
+        background: rgba(36, 28, 20, 0.72);
+        color: #fffaf3;
+        font-size: 0.8rem;
+        font-weight: 650;
+        letter-spacing: 0.04em;
+        opacity: 0;
+        transform: translateY(6px);
+        transition: opacity 180ms ease, transform 180ms ease;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: none;
+      }
+
+      @media (max-width: 700px) {
+        .board {
+          flex-direction: column;
+        }
+
+        .swatch {
+          justify-content: center;
+          padding: 0.85rem 1.1rem;
+        }
+
+        .idea-bar {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .idea-bar .hint {
+          display: none;
+        }
+
+        .hint-mobile {
+          display: block;
+          position: fixed;
+          left: 50%;
+          bottom: 0.85rem;
+          margin: 0;
+          transform: translateX(-50%);
+          padding: 0.32rem 0.7rem;
+          border-radius: 999px;
+          background: rgba(36, 28, 20, 0.45);
+          font-size: 0.75rem;
+          letter-spacing: 0.03em;
+          pointer-events: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="idea-bar">
+      <a href="../../">← ideas</a>
+      <p class="hint">Click to shuffle · tap a hex to copy</p>
+      <span class="toy-name">Palette Shuffle</span>
+    </nav>
+
+    <div class="board" id="board" role="button" tabindex="0" aria-label="Shuffle palette">
+      <div class="swatch"><button class="hex" type="button">#000000</button></div>
+      <div class="swatch"><button class="hex" type="button">#000000</button></div>
+      <div class="swatch"><button class="hex" type="button">#000000</button></div>
+      <div class="swatch"><button class="hex" type="button">#000000</button></div>
+      <div class="swatch"><button class="hex" type="button">#000000</button></div>
+    </div>
+    <p class="hint-mobile">Click to shuffle · tap a hex to copy</p>
+    <div class="toast" id="toast" role="status" aria-live="polite">Copied</div>
+
+    <script>
+      const board = document.getElementById("board");
+      const swatches = Array.from(document.querySelectorAll(".swatch"));
+      const toast = document.getElementById("toast");
+      let toastTimer = 0;
+
+      function hslToHex(h, s, l) {
+        const sat = s / 100;
+        const light = l / 100;
+        const a = sat * Math.min(light, 1 - light);
+        const f = function (n) {
+          const k = (n + h / 30) % 12;
+          const color = light - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+          return Math.round(255 * color)
+            .toString(16)
+            .padStart(2, "0");
+        };
+        return ("#" + f(0) + f(8) + f(4)).toUpperCase();
+      }
+
+      function makePalette() {
+        const base = Math.random() * 360;
+        const mode = Math.floor(Math.random() * 3);
+        const offsets =
+          mode === 0
+            ? [-18, -8, 0, 10, 22]
+            : mode === 1
+              ? [0, 16, 34, 178, 196]
+              : [0, 28, 48, 210, 330];
+
+        return offsets.map(function (offset, i) {
+          const h = (base + offset + 360) % 360;
+          const s = 42 + ((i * 11) % 28) + Math.random() * 10;
+          const l = 28 + i * 9 + Math.random() * 6;
+          return { h, s, l, hex: hslToHex(h, s, l) };
+        });
+      }
+
+      function paint() {
+        const palette = makePalette();
+        swatches.forEach(function (swatch, i) {
+          const color = palette[i];
+          swatch.style.backgroundColor = color.hex;
+          const button = swatch.querySelector(".hex");
+          button.textContent = color.hex;
+          button.dataset.hex = color.hex;
+          const dark = color.l < 48;
+          button.style.color = dark ? "#fffaf3" : "#241c14";
+        });
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(function () {
+          toast.classList.remove("show");
+        }, 1200);
+      }
+
+      async function copyHex(hex) {
+        try {
+          await navigator.clipboard.writeText(hex);
+          showToast("Copied " + hex);
+        } catch (err) {
+          showToast(hex);
+        }
+      }
+
+      board.addEventListener("click", function (event) {
+        const hexButton = event.target.closest(".hex");
+        if (hexButton) {
+          event.stopPropagation();
+          copyHex(hexButton.dataset.hex);
+          return;
+        }
+        paint();
+      });
+
+      board.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          paint();
+        }
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === " " && event.target === document.body) {
+          event.preventDefault();
+          paint();
+        }
+      });
+
+      paint();
+    </script>
+  </body>
+</html>
