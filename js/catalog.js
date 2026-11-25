@@ -23,4 +23,11 @@ window.IDEAS = [
     date: "2026-09-26",
     tag: "color",
   },
+  {
+    slug: "rainbow-chomp",
+    title: "Rainbow Chomp",
+    blurb: "A Pac-Man mouth that follows your pointer and sprays a rushing rainbow when it moves.",
+    date: "2026-11-25",
+    tag: "motion",
+  },
 ];
