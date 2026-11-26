@@ -30,4 +30,11 @@ window.IDEAS = [
     date: "2026-11-25",
     tag: "motion",
   },
+  {
+    slug: "tiny-planet",
+    title: "Tiny Planet",
+    blurb: "A little Earth at the bottom of the sky, turning from day to night. Drag to throw it; the eyes follow you.",
+    date: "2026-11-25",
+    tag: "scene",
+  },
 ];
