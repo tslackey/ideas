@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#3f5c47">
+  <title>Mega Fish · ideas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@550;650&family=Fraunces:opsz,wght@9..144,560&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/idea.css">
+  <style>
+    :root {
+      --felt: #3f5c47;
+      --felt-deep: #2f4a38;
+      --paper: #fffaf3;
+      --ink: #241c14;
+      --muted: #6d6256;
+      --line: #d9ccb8;
+      --accent: #c24d2c;
+      --accent-deep: #9a3518;
+      --gold: #e8b84a;
+      --cream: #f3eadf;
+      --card-w: 70px;
+      --card-h: 98px;
+      --card-r: 12px;
+      --shadow: 0 8px 20px -12px rgba(36, 28, 20, 0.45);
+      --ui: Figtree, system-ui, sans-serif;
+      --rank: Fraunces, Georgia, serif;
+    }
+    @media (min-width: 800px) {
+      :root { --card-w: 72px; --card-h: 104px; }
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: var(--cream);
+      color: var(--ink);
+      overflow: hidden;
+      font-family: var(--ui);
+      font-weight: 550;
+    }
+    button { font: inherit; color: inherit; }
+    .table {
+      position: relative;
+      height: 100dvh;
+      max-height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(ellipse 90% 70% at 50% 38%, #4a6b53 0%, var(--felt) 58%, #35543e 100%);
+      color: var(--paper);
+    }
+    @media (min-width: 800px) {
+      body { display: flex; justify-content: center; background: var(--cream); }
+      .table { width: 100%; max-width: 720px; }
+    }
+    .idea-bar {
+      color: var(--paper);
+      padding-top: calc(10px + env(safe-area-inset-top, 0px));
+      padding-left: calc(16px + env(safe-area-inset-left, 0px));
+      padding-right: calc(16px + env(safe-area-inset-right, 0px));
+    }
+    .idea-bar a { color: var(--paper); }
+    .idea-bar a:hover { color: var(--gold); }
+    .hud {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-shrink: 0;
+      margin-top: calc(42px + env(safe-area-inset-top, 0px));
+      padding: 4px 14px 6px;
+    }
+    .turn-pill {
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 650;
+      box-shadow: var(--shadow);
+      max-width: 62%;
+      line-height: 1.2;
+    }
+    .turn-pill.is-pulse { animation: pill-pulse 0.7s ease 2; }
+    @keyframes pill-pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(232, 184, 74, 0.55); }
+      50% { transform: scale(1.06); box-shadow: 0 0 0 8px rgba(232, 184, 74, 0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .turn-pill.is-pulse {
+        animation: none;
+        outline: 2px solid var(--gold);
+        outline-offset: 2px;
+      }
+    }
+    .wild-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+    .wild-badge .mini-face {
+      width: 36px;
+      height: 50px;
+      border-radius: 8px;
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      font-family: var(--rank);
+      font-weight: 560;
+      line-height: 1;
+    }
+    .wild-badge .mini-face.is-red { color: var(--accent); }
+    .wild-badge .mini-rank { font-size: 15px; }
+    .wild-badge .mini-suit { font-size: 14px; }
+    .wild-badge .ribbon {
+      background: var(--gold);
+      color: var(--ink);
+      font-size: 9px;
+      font-weight: 650;
+      letter-spacing: 0.08em;
+      padding: 2px 7px;
+      border-radius: 999px;
+      margin-top: -8px;
+      position: relative;
+      box-shadow: var(--shadow);
+    }
+    .board {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(84px, 1fr) auto minmax(84px, 1fr);
+      grid-template-rows: auto auto;
+      grid-template-areas:
+        "pip pip pip"
+        "dot pond finn";
+      align-items: center;
+      justify-items: center;
+      align-content: center;
+      gap: 10px 8px;
+      padding: 0 8px 4px;
+    }
+    .seat-pip { grid-area: pip; }
+    .seat-dot { grid-area: dot; }
+    .pond { grid-area: pond; }
+    .seat-finn { grid-area: finn; }
+    .seat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 8px;
+      border-radius: 16px;
+      border: 2px solid transparent;
+      min-width: 84px;
+      user-select: none;
+    }
+    .seat.is-target {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(194, 77, 44, 0.35);
+      cursor: pointer;
+    }
+    .seat-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: 0.02em;
+    }
+    .count {
+      background: var(--felt-deep);
+      color: var(--paper);
+      border-radius: 999px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 650;
+    }
+    .fan {
+      display: flex;
+      align-items: flex-end;
+      height: 44px;
+      min-width: 40px;
+    }
+    .fan .card.is-back {
+      width: 28px;
+      height: 40px;
+      margin-left: -14px;
+      border-radius: 6px;
+    }
+    .fan .card.is-back:first-child { margin-left: 0; }
+    .set-slots {
+      display: flex;
+      gap: 4px;
+    }
+    .slot {
+      width: 22px;
+      height: 28px;
+      border-radius: 5px;
+      border: 1.5px solid var(--line);
+      background: rgba(255, 250, 243, 0.12);
+    }
+    .slot.is-filled {
+      border-color: transparent;
+      background: var(--paper);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      font-family: var(--rank);
+      font-weight: 560;
+      font-size: 12px;
+      box-shadow: var(--shadow);
+    }
+    .slot.is-filled.is-red { color: var(--accent); }
+    .pool {
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #3a5a46, var(--felt-deep));
+      box-shadow: inset 0 8px 18px rgba(0, 0, 0, 0.25), var(--shadow);
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+    .stack {
+      position: absolute;
+      width: 38px;
+      height: 54px;
+    }
+    .stack .card.is-back {
+      position: absolute;
+      width: 38px;
+      height: 54px;
+      border-radius: 8px;
+    }
+    .stack .card.is-back:nth-child(1) { transform: rotate(-8deg) translate(-3px, 1px); }
+    .stack .card.is-back:nth-child(2) { transform: rotate(6deg) translate(3px, -1px); }
+    .stack .card.is-back:nth-child(3) { transform: rotate(-1deg); }
+    .pool.is-empty .stack { display: none; }
+    .pond-count {
+      position: relative;
+      z-index: 1;
+      font-family: var(--rank);
+      font-weight: 560;
+      font-size: 1.55rem;
+      color: var(--paper);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    }
+    .you-tray {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 2px 12px 4px;
+    }
+    .you-tray .you-name {
+      font-size: 13px;
+      font-weight: 650;
+    }
+    .toast-row {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      min-height: 28px;
+      padding: 0 12px 4px;
+    }
+    .toast {
+      background: var(--ink);
+      color: var(--paper);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 550;
+      box-shadow: var(--shadow);
+      max-width: 100%;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(4px);
+      pointer-events: none;
+    }
+    .toast.is-on {
+      opacity: 1;
+      transform: none;
+    }
+    .hand {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 4px;
+      padding: 0 8px calc(8px + env(safe-area-inset-bottom, 0px));
+      min-height: calc(var(--card-h) + 28px);
+      overflow: visible;
+    }
+    .rank-group {
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      padding: 4px 2px 0;
+      border-radius: 14px;
+      border: 2px solid transparent;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .rank-group:has(.lay-set) { padding-top: 26px; }
+    .rank-group.is-legal { cursor: pointer; }
+    .rank-group.is-selected {
+      border-color: var(--accent);
+      transform: translateY(-12px);
+      box-shadow: 0 0 0 3px rgba(194, 77, 44, 0.3);
+    }
+    .rank-group.is-dead { opacity: 0.55; }
+    .rank-group .card { margin-left: -22px; }
+    .rank-group .card:first-child { margin-left: 0; }
+    .lay-set {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: auto;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      background: var(--accent);
+      color: var(--paper);
+      border: 0;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 650;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      z-index: 2;
+    }
+    .lay-set:active { background: var(--accent-deep); }
+    .card {
+      width: var(--card-w);
+      height: var(--card-h);
+      border-radius: var(--card-r);
+      background: var(--paper);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      position: relative;
+      flex-shrink: 0;
+      padding: 0;
+      display: block;
+      overflow: hidden;
+    }
+    .card .corner {
+      position: absolute;
+      top: 5px;
+      left: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1;
+      font-family: var(--rank);
+      font-weight: 560;
+    }
+    .card .corner .r { font-size: 15px; }
+    .card .corner .s { font-size: 13px; }
+    .card .corner.is-10 .r { font-size: 13px; }
+    .card .pip {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      font-family: var(--rank);
+      pointer-events: none;
+    }
+    .card.is-red, .card.is-red .corner { color: var(--accent); }
+    .card.is-back {
+      background: var(--felt-deep);
+      border-color: #24392c;
+      color: var(--cream);
+    }
+    .card.is-back .fish-mark {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--cream);
+    }
+    .card.is-back .fish-mark svg { width: 62%; height: auto; }
+    .card.is-joker { background: var(--cream); }
+    .card.is-joker .joker-fish {
+      position: absolute;
+      inset: 10px 6px 22px;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+    }
+    .card.is-joker .joker-fish svg { width: 78%; height: auto; }
+    .card.is-joker .joker-word {
+      position: absolute;
+      bottom: 7px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 9px;
+      font-weight: 650;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+    }
+    .wild-tag {
+      position: absolute;
+      right: 4px;
+      bottom: 5px;
+      background: var(--gold);
+      color: var(--ink);
+      font-size: 7px;
+      font-weight: 650;
+      letter-spacing: 0.06em;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .card.is-fly { animation: fly-in 0.4s ease; }
+    @keyframes fly-in {
+      from { transform: translateY(-18px) scale(0.92); opacity: 0.3; }
+      to { transform: none; opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .card.is-fly { animation: none; }
+      .rank-group { transition: none; }
+    }
+    .win-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(36, 28, 20, 0.55);
+      display: none;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      z-index: 20;
+      padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    }
+    .win-overlay.is-on { display: flex; }
+    .win-card {
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 20px;
+      padding: 24px 20px 16px;
+      width: min(420px, 100%);
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .win-card h1 {
+      font-family: var(--rank);
+      font-weight: 560;
+      font-size: 2rem;
+      margin: 0 0 16px;
+    }
+    .win-seats {
+      display: grid;
+      gap: 8px;
+      text-align: left;
+    }
+    .win-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 650;
+    }
+    .win-row .chips { display: flex; gap: 4px; }
+    .win-row .chips .slot { width: 26px; height: 32px; font-size: 13px; }
+    .win-row .chips .slot.is-filled {
+      background: var(--cream);
+      border: 1.5px solid var(--line);
+    }
+    [data-action="again"] {
+      display: block;
+      width: 100%;
+      height: 48px;
+      margin-top: 16px;
+      background: var(--accent);
+      color: var(--paper);
+      border: 0;
+      border-radius: 12px;
+      font-family: var(--ui);
+      font-size: 16px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    [data-action="again"]:active { background: var(--accent-deep); }
+  </style>
+</head>
+<body>
+  <div class="table" id="table">
+    <header class="idea-bar">
+      <a href="../../">← ideas</a>
+      <span>Mega Fish</span>
+    </header>
+    <div class="hud">
+      <div class="turn-pill" id="turn-pill" role="status">Your turn</div>
+      <div class="wild-badge" id="wild-badge"></div>
+    </div>
+    <div class="board">
+      <div class="seat seat-pip" data-seat="pip"></div>
+      <div class="seat seat-dot" data-seat="dot"></div>
+      <div class="pond" id="pond"></div>
+      <div class="seat seat-finn" data-seat="finn"></div>
+    </div>
+    <div class="you-tray">
+      <div class="set-slots" data-sets="you"></div>
+      <div class="you-name">You</div>
+    </div>
+    <div class="toast-row">
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+    <div class="hand" id="hand"></div>
+  </div>
+  <div class="win-overlay" id="win-overlay">
+    <div class="win-card">
+      <h1 id="win-title">You win!</h1>
+      <div class="win-seats" id="win-sets"></div>
+      <button type="button" data-action="again">Play again</button>
+    </div>
+  </div>
+  <script>
+  (function () {
+    const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+    const SUITS = ["spades", "hearts", "diamonds", "clubs"];
+    const SUIT_MARK = { spades: "♠", hearts: "♥", diamonds: "♦", clubs: "♣" };
+    const SUIT_ORDER = { spades: 0, hearts: 1, diamonds: 2, clubs: 3 };
+    const RANK_PLURAL = { A: "Aces", J: "Jacks", Q: "Queens", K: "Kings" };
+    const RANK_ONE = { A: "Ace", J: "Jack", Q: "Queen", K: "King" };
+    const SEATS = ["you", "finn", "pip", "dot"];
+    const NAMES = { you: "You", finn: "Finn", pip: "Pip", dot: "Dot" };
+    const FISH = '<svg viewBox="0 0 48 32" aria-hidden="true"><path fill="currentColor" d="M30 16c0 7-6.5 12-14.5 12C8 28 2 22.5 2 16S8 4 15.5 4C23.5 4 30 9 30 16z"/><path fill="currentColor" d="M29 16l17-10v20L29 16z"/><circle cx="14" cy="13" r="2.3" fill="#fffaf3"/><path d="M10 18c2.4 3 7 3 9.2 0" fill="none" stroke="#fffaf3" stroke-width="1.7" stroke-linecap="round"/></svg>';
+    const FISH_JOKER = '<svg viewBox="0 0 48 32" aria-hidden="true"><path fill="currentColor" d="M30 16c0 7-6.5 12-14.5 12C8 28 2 22.5 2 16S8 4 15.5 4C23.5 4 30 9 30 16z"/><path fill="currentColor" d="M29 16l17-10v20L29 16z"/><circle cx="14" cy="13" r="2.3" fill="#fffaf3"/><path d="M10 18c2.4 3 7 3 9.2 0" fill="none" stroke="#fffaf3" stroke-width="1.7" stroke-linecap="round"/></svg>';
+
+    function pluralRank(r) { return RANK_PLURAL[r] || r + "s"; }
+    function oneRank(r) { return RANK_ONE[r] || r; }
+    function countPhrase(n, r) {
+      return n === 1 ? "1 " + oneRank(r) : n + " " + pluralRank(r);
+    }
+    function isRed(suit) { return suit === "hearts" || suit === "diamonds"; }
+
+    function mulberry32(seed) {
+      let a = seed >>> 0;
+      return function () {
+        a |= 0;
+        a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function delays() {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduce) return { think: 150, hold: 150, draw: 150, chain: 150 };
+      return { think: 700, hold: 900, draw: 400, chain: 650 };
+    }
+
+    let rng = Math.random;
+    let cardSeq = 0;
+    let gen = 0;
+    let state = null;
+    let toastTimer = 0;
+
+    function makeCard(rank, suit, joker) {
+      return { id: "c" + (++cardSeq), rank: joker ? null : rank, suit: joker ? null : suit, joker: !!joker };
+    }
+    function freshDeck() {
+      const d = [];
+      for (const r of RANKS) for (const s of SUITS) d.push(makeCard(r, s, false));
+      d.push(makeCard(null, null, true));
+      d.push(makeCard(null, null, true));
+      return d;
+    }
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        const t = arr[i];
+        arr[i] = arr[j];
+        arr[j] = t;
+      }
+      return arr;
+    }
+    function emptyPlayer(id) {
+      return { id: id, name: NAMES[id], hand: [], sets: [] };
+    }
+    function blankState() {
+      return {
+        players: {
+          you: emptyPlayer("you"),
+          finn: emptyPlayer("finn"),
+          pip: emptyPlayer("pip"),
+          dot: emptyPlayer("dot"),
+        },
+        pond: [],
+        wildRank: null,
+        wildCard: null,
+        laidRanks: {},
+        turn: "you",
+        phase: "ask",
+        selectedRank: null,
+        luckyFishReady: true,
+        inLuckyFishTurn: false,
+        skippedStreak: 0,
+        winner: null,
+        turnText: "Your turn",
+        busy: false,
+        transferring: false,
+      };
+    }
+    function sortHand(hand) {
+      hand.sort(function (a, b) {
+        const ar = a.joker ? 99 : RANKS.indexOf(a.rank);
+        const br = b.joker ? 99 : RANKS.indexOf(b.rank);
+        if (ar !== br) return ar - br;
+        return (SUIT_ORDER[a.suit] || 0) - (SUIT_ORDER[b.suit] || 0);
+      });
+    }
+    function sortHands(s) {
+      SEATS.forEach(function (id) { sortHand(s.players[id].hand); });
+    }
+    function isNatural(card, rank) {
+      return !card.joker && card.rank === rank;
+    }
+    function legalRanks(s, playerId) {
+      const hand = s.players[playerId].hand;
+      return RANKS.filter(function (r) {
+        return !s.laidRanks[r] && hand.some(function (c) { return isNatural(c, r); });
+      });
+    }
+    function canAsk(s, playerId) {
+      return legalRanks(s, playerId).length > 0;
+    }
+    function allHandsEmpty(s) {
+      return SEATS.every(function (id) { return s.players[id].hand.length === 0; });
+    }
+
+    function collectSets(s, playerId) {
+      const laid = s.laidRanks;
+      const wildRank = s.wildRank;
+      let remaining = s.players[playerId].hand.slice();
+      const auto = [];
+      const manual = [];
+      function take(rank) {
+        if (laid[rank]) return null;
+        const nat = remaining.filter(function (c) { return isNatural(c, rank); });
+        if (!nat.length) return null;
+        const jok = remaining.filter(function (c) { return c.joker; });
+        const fill = (wildRank && wildRank !== rank)
+          ? remaining.filter(function (c) { return isNatural(c, wildRank); })
+          : [];
+        if (nat.length + jok.length + fill.length < 4) return null;
+        const cards = nat.slice();
+        for (let i = 0; i < jok.length && cards.length < 4; i++) cards.push(jok[i]);
+        for (let i = 0; i < fill.length && cards.length < 4; i++) cards.push(fill[i]);
+        const chosen = cards.slice(0, 4);
+        const isNat = chosen.every(function (c) { return isNatural(c, rank); });
+        return { rank: rank, cards: chosen, isNatural: isNat };
+      }
+      RANKS.forEach(function (rank) {
+        const set = take(rank);
+        if (set && set.isNatural) {
+          auto.push(set);
+          const ids = {};
+          set.cards.forEach(function (c) { ids[c.id] = true; });
+          remaining = remaining.filter(function (c) { return !ids[c.id]; });
+        }
+      });
+      RANKS.forEach(function (rank) {
+        const set = take(rank);
+        if (set && !set.isNatural) {
+          manual.push(set);
+          const ids = {};
+          set.cards.forEach(function (c) { ids[c.id] = true; });
+          remaining = remaining.filter(function (c) { return !ids[c.id]; });
+        }
+      });
+      return { auto: auto, manual: manual };
+    }
+
+    function laySet(s, playerId, set) {
+      const p = s.players[playerId];
+      const ids = {};
+      set.cards.forEach(function (c) { ids[c.id] = true; });
+      p.hand = p.hand.filter(function (c) { return !ids[c.id]; });
+      p.sets.push({ rank: set.rank, cards: set.cards });
+      s.laidRanks[set.rank] = playerId;
+      if (p.sets.length >= 3) {
+        s.winner = playerId;
+        s.phase = "over";
+        return true;
+      }
+      return false;
+    }
+
+    function autoLayNaturals(s, playerId) {
+      let won = false;
+      let safety = 0;
+      while (safety++ < 8) {
+        const auto = collectSets(s, playerId).auto;
+        if (!auto.length) break;
+        const set = auto[0];
+        const who = playerId === "you" ? "You" : NAMES[playerId];
+        showToast(who + " laid " + pluralRank(set.rank) + ".");
+        if (laySet(s, playerId, set)) won = true;
+      }
+      return won;
+    }
+
+    function aiLayReadySets(s, playerId) {
+      if (playerId === "you") return false;
+      let won = false;
+      let safety = 0;
+      while (safety++ < 8) {
+        const manual = collectSets(s, playerId).manual;
+        if (!manual.length) break;
+        const set = manual[0];
+        showToast(NAMES[playerId] + " laid " + pluralRank(set.rank) + ".");
+        if (laySet(s, playerId, set)) won = true;
+      }
+      return won;
+    }
+
+    function sleep(ms) {
+      const g = gen;
+      return new Promise(function (resolve) {
+        setTimeout(function () { resolve(g === gen); }, ms);
+      });
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("is-on");
+      el.dataset.msg = msg;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () {
+        el.classList.remove("is-on");
+      }, 2200);
+    }
+
+    function pulseTurnPill() {
+      const el = document.getElementById("turn-pill");
+      el.classList.remove("is-pulse");
+      void el.offsetWidth;
+      el.classList.add("is-pulse");
+      setTimeout(function () { el.classList.remove("is-pulse"); }, 1600);
+    }
+
+    function cardFaceHTML(card, opts) {
+      opts = opts || {};
+      if (opts.back) {
+        return '<div class="card is-back" aria-hidden="true"><span class="fish-mark">' + FISH + "</span></div>";
+      }
+      const tag = opts.button === false ? "div" : "button type=\"button\"";
+      const close = opts.button === false ? "div" : "button";
+      if (card.joker) {
+        return "<" + tag + ' class="card is-joker" data-card="' + card.id + '">' +
+          '<span class="joker-fish">' + FISH_JOKER + "</span>" +
+          '<span class="joker-word">JOKER</span></' + close + ">";
+      }
+      const wild = state && state.wildRank && card.rank === state.wildRank;
+      const red = isRed(card.suit) ? " is-red" : "";
+      const ten = card.rank === "10" ? " is-10" : "";
+      return "<" + tag + ' class="card' + red + (wild ? " is-wild" : "") + '" data-card="' + card.id + '" data-rank="' + card.rank + '">' +
+        '<span class="corner' + ten + '"><span class="r">' + card.rank + '</span><span class="s">' + SUIT_MARK[card.suit] + "</span></span>" +
+        '<span class="pip">' + SUIT_MARK[card.suit] + "</span>" +
+        (wild ? '<span class="wild-tag">WILD</span>' : "") +
+        "</" + close + ">";
+    }
+
+    function renderSlots(el, sets) {
+      let html = "";
+      for (let i = 0; i < 3; i++) {
+        const set = sets[i];
+        if (set) {
+          const sample = set.cards.find(function (c) { return !c.joker && c.rank === set.rank; }) || set.cards[0];
+          const red = sample && isRed(sample.suit) ? " is-red" : "";
+          html += '<div class="slot is-filled' + red + '" data-set-rank="' + set.rank + '">' + set.rank + "</div>";
+        } else {
+          html += '<div class="slot"></div>';
+        }
+      }
+      el.innerHTML = html;
+    }
+
+    function renderSeat(id) {
+      const el = document.querySelector('[data-seat="' + id + '"]');
+      const p = state.players[id];
+      const targeting = state.phase === "pick-target" && state.turn === "you" && state.selectedRank;
+      el.classList.toggle("is-target", !!targeting);
+      const n = p.hand.length;
+      const show = Math.min(n, 7);
+      let fan = "";
+      for (let i = 0; i < show; i++) fan += cardFaceHTML(null, { back: true });
+      el.innerHTML =
+        '<div class="seat-name">' + NAMES[id] + ' <span class="count" data-count="' + id + '">' + n + "</span></div>" +
+        '<div class="fan" data-fan="' + id + '">' + fan + "</div>" +
+        '<div class="set-slots" data-sets="' + id + '"></div>';
+      renderSlots(el.querySelector("[data-sets]"), p.sets);
+    }
+
+    function renderWild() {
+      const el = document.getElementById("wild-badge");
+      const c = state.wildCard;
+      if (!c) { el.innerHTML = ""; return; }
+      const red = isRed(c.suit) ? " is-red" : "";
+      el.innerHTML =
+        '<div class="mini-face' + red + '"><span class="mini-rank">' + c.rank + '</span><span class="mini-suit">' + SUIT_MARK[c.suit] + "</span></div>" +
+        '<span class="ribbon">WILD</span>';
+    }
+
+    function renderPond() {
+      const el = document.getElementById("pond");
+      const n = state.pond.length;
+      const stack = n > 0
+        ? '<div class="stack">' + cardFaceHTML(null, { back: true }) + cardFaceHTML(null, { back: true }) + cardFaceHTML(null, { back: true }) + "</div>"
+        : "";
+      el.innerHTML = '<div class="pool' + (n ? "" : " is-empty") + '">' + stack + '<div class="pond-count" id="pond-count">' + n + "</div></div>";
+    }
+
+    function renderHand() {
+      const el = document.getElementById("hand");
+      const hand = state.players.you.hand;
+      const legal = new Set(legalRanks(state, "you"));
+      const manual = collectSets(state, "you").manual;
+      const layable = {};
+      manual.forEach(function (s) { layable[s.rank] = true; });
+      const groups = [];
+      hand.forEach(function (card) {
+        const key = card.joker ? "JOKER" : card.rank;
+        const last = groups[groups.length - 1];
+        if (last && last.key === key) last.cards.push(card);
+        else groups.push({ key: key, cards: [card] });
+      });
+      el.innerHTML = groups.map(function (g) {
+        const isJoker = g.key === "JOKER";
+        const isLegal = !isJoker && legal.has(g.key);
+        const isDead = !isJoker && !!state.laidRanks[g.key];
+        const selected = state.selectedRank === g.key;
+        const cls = "rank-group" +
+          (isLegal ? " is-legal" : "") +
+          (selected ? " is-selected" : "") +
+          (isDead ? " is-dead" : "");
+        const lay = layable[g.key]
+          ? '<button type="button" class="lay-set" data-action="lay" data-rank="' + g.key + '">Lay set</button>'
+          : "";
+        const cards = g.cards.map(function (c) { return cardFaceHTML(c); }).join("");
+        const rankAttr = isJoker ? "" : ' data-rank="' + g.key + '"';
+        return '<div class="' + cls + '"' + rankAttr + ">" + lay + cards + "</div>";
+      }).join("");
+    }
+
+    function renderWin() {
+      const overlay = document.getElementById("win-overlay");
+      if (!state || state.phase !== "over") {
+        overlay.classList.remove("is-on");
+        return;
+      }
+      const title = state.winner === "draw"
+        ? "Draw"
+        : state.winner === "you"
+          ? "You win!"
+          : NAMES[state.winner] + " wins";
+      document.getElementById("win-title").textContent = title;
+      const rows = ["you", "dot", "pip", "finn"].map(function (id) {
+        const p = state.players[id];
+        const host = document.createElement("div");
+        renderSlots(host, p.sets);
+        return '<div class="win-row"><span>' + NAMES[id] + "</span><div class=\"chips\">" + host.innerHTML + "</div></div>";
+      }).join("");
+      document.getElementById("win-sets").innerHTML = rows;
+      overlay.classList.add("is-on");
+    }
+
+    function fitHand() {
+      const el = document.getElementById("hand");
+      el.style.transform = "";
+      const avail = el.clientWidth;
+      const w = el.scrollWidth;
+      if (avail > 0 && w > avail) {
+        el.style.transformOrigin = "bottom center";
+        el.style.transform = "scale(" + (avail / w) + ")";
+      }
+    }
+    function render() {
+      if (!state) return;
+      document.getElementById("turn-pill").textContent = state.turnText;
+      renderWild();
+      renderSeat("pip");
+      renderSeat("dot");
+      renderSeat("finn");
+      renderPond();
+      renderSlots(document.querySelector('.you-tray [data-sets="you"]'), state.players.you.sets);
+      renderHand();
+      renderWin();
+      fitHand();
+    }
+
+    function finishHeadline(s) {
+      if (s.winner === "draw") s.turnText = "Draw";
+      else if (s.winner === "you") s.turnText = "You win!";
+      else if (s.winner) s.turnText = NAMES[s.winner] + " wins";
+    }
+    function maybeEnd(s) {
+      if (s.phase === "over") {
+        s.busy = false;
+        s.selectedRank = null;
+        finishHeadline(s);
+        render();
+        return true;
+      }
+      if (allHandsEmpty(s)) {
+        endByStall(s);
+        return true;
+      }
+      return false;
+    }
+
+    function endByStall(s) {
+      const scores = SEATS.map(function (id) {
+        return { id: id, n: s.players[id].sets.length };
+      }).sort(function (a, b) { return b.n - a.n; });
+      s.winner = scores[0].n === scores[1].n ? "draw" : scores[0].id;
+      s.phase = "over";
+      s.busy = false;
+      s.selectedRank = null;
+      finishHeadline(s);
+      render();
+    }
+
+    async function beginTurn(g, id) {
+      if (gen !== g || state.phase === "over") return;
+      if (id !== "you") {
+        if (aiLayReadySets(state, id) && maybeEnd(state)) return;
+      }
+      if (!canAsk(state, id)) {
+        state.skippedStreak += 1;
+        const msg = id === "you" ? "You are skipped." : NAMES[id] + " is skipped.";
+        showToast(msg);
+        render();
+        const ok = await sleep(delays().think);
+        if (!ok || gen !== g) return;
+        if (state.skippedStreak >= 4 || allHandsEmpty(state)) {
+          endByStall(state);
+          return;
+        }
+        const next = SEATS[(SEATS.indexOf(id) + 1) % 4];
+        await beginTurn(g, next);
+        return;
+      }
+      state.skippedStreak = 0;
+      state.turn = id;
+      if (id === "you") {
+        state.phase = "ask";
+        state.turnText = "Your turn";
+        state.busy = false;
+        render();
+        return;
+      }
+      state.phase = "ai";
+      state.turnText = NAMES[id] + " is asking…";
+      state.busy = true;
+      render();
+      const ok = await sleep(delays().think);
+      if (!ok || gen !== g) return;
+      await aiAsk(g, id);
+    }
+
+    async function endTurn(g, fromId) {
+      if (gen !== g || state.phase === "over") return;
+      state.luckyFishReady = true;
+      state.inLuckyFishTurn = false;
+      state.selectedRank = null;
+      const next = SEATS[(SEATS.indexOf(fromId) + 1) % 4];
+      await beginTurn(g, next);
+    }
+
+    async function performAsk(g, askerId, targetId, rank) {
+      if (gen !== g || state.phase === "over") return;
+      state.busy = true;
+      state.transferring = true;
+      state.selectedRank = null;
+      const asker = state.players[askerId];
+      const target = state.players[targetId];
+      const askerName = askerId === "you" ? "You" : NAMES[askerId];
+      const targetName = targetId === "you" ? "you" : NAMES[targetId];
+      const askMsg = askerId === "you"
+        ? "You asked " + NAMES[targetId] + " for " + pluralRank(rank) + "."
+        : NAMES[askerId] + " asked " + targetName + " for " + pluralRank(rank) + ".";
+      showToast(askMsg);
+      if (askerId !== "you") state.turnText = NAMES[askerId] + " is asking…";
+      render();
+      if (askerId !== "you") {
+        const okHold = await sleep(delays().hold);
+        if (!okHold || gen !== g) return;
+      }
+
+      const given = target.hand.filter(function (c) { return isNatural(c, rank); });
+      if (given.length) {
+        target.hand = target.hand.filter(function (c) { return !isNatural(c, rank); });
+        asker.hand.push.apply(asker.hand, given);
+        sortHand(asker.hand);
+        const giveMsg = targetId === "you"
+          ? "You give " + NAMES[askerId] + " " + countPhrase(given.length, rank) + "."
+          : NAMES[targetId] + " gives " + (askerId === "you" ? "you" : NAMES[askerId]) + " " + countPhrase(given.length, rank) + ".";
+        showToast(giveMsg);
+        state.transferring = false;
+        render();
+        const okDraw = await sleep(delays().draw);
+        if (!okDraw || gen !== g) return;
+        autoLayNaturals(state, askerId);
+        if (askerId !== "you") aiLayReadySets(state, askerId);
+        state.luckyFishReady = true;
+        state.inLuckyFishTurn = false;
+        state.skippedStreak = 0;
+        if (maybeEnd(state)) return;
+        if (!canAsk(state, askerId)) {
+          await endTurn(g, askerId);
+          return;
+        }
+        if (askerId === "you") {
+          state.phase = "ask";
+          state.turnText = "Your turn";
+          state.busy = false;
+          render();
+          return;
+        }
+        const okChain = await sleep(delays().chain);
+        if (!okChain || gen !== g) return;
+        await aiAsk(g, askerId);
+        return;
+      }
+
+      if (state.pond.length === 0) {
+        showToast("Go fish. The pond is empty.");
+        state.transferring = false;
+        state.luckyFishReady = true;
+        state.inLuckyFishTurn = false;
+        state.skippedStreak = 0;
+        render();
+        const okEmpty = await sleep(Math.max(delays().hold, delays().draw));
+        if (!okEmpty || gen !== g) return;
+        await endTurn(g, askerId);
+        return;
+      }
+      showToast("Go fish");
+      render();
+      const okPause = await sleep(delays().draw);
+      if (!okPause || gen !== g) return;
+      const drawn = state.pond.pop();
+      asker.hand.push(drawn);
+      sortHand(asker.hand);
+      const lucky = isNatural(drawn, rank);
+      state.transferring = false;
+      render();
+      autoLayNaturals(state, askerId);
+      if (askerId !== "you") aiLayReadySets(state, askerId);
+      if (maybeEnd(state)) return;
+      if (lucky && state.luckyFishReady) {
+        showToast("Lucky fish! Extra turn");
+        pulseTurnPill();
+        state.luckyFishReady = false;
+        state.inLuckyFishTurn = true;
+        state.skippedStreak = 0;
+        if (!canAsk(state, askerId)) {
+          await endTurn(g, askerId);
+          return;
+        }
+        if (askerId === "you") {
+          state.phase = "ask";
+          state.turnText = "Your turn";
+          state.busy = false;
+          render();
+          return;
+        }
+        const okChain2 = await sleep(delays().chain);
+        if (!okChain2 || gen !== g) return;
+        await aiAsk(g, askerId);
+        return;
+      }
+      state.luckyFishReady = true;
+      state.inLuckyFishTurn = false;
+      state.skippedStreak = 0;
+      await endTurn(g, askerId);
+    }
+
+    async function aiAsk(g, aiId) {
+      if (gen !== g || state.phase === "over") return;
+      const ranks = legalRanks(state, aiId);
+      if (!ranks.length) {
+        await endTurn(g, aiId);
+        return;
+      }
+      const rank = ranks[Math.floor(rng() * ranks.length)];
+      const others = SEATS.filter(function (id) { return id !== aiId; });
+      const target = others[Math.floor(rng() * others.length)];
+      await performAsk(g, aiId, target, rank);
+    }
+
+    function dealFresh() {
+      let s = null;
+      for (let attempt = 0; attempt < 30; attempt++) {
+        s = blankState();
+        const deck = shuffle(freshDeck());
+        for (let i = 0; i < 5; i++) {
+          ["you", "dot", "pip", "finn"].forEach(function (id) {
+            s.players[id].hand.push(deck.pop());
+          });
+        }
+        const leftover = [];
+        let wild = deck.pop();
+        while (wild && wild.joker) {
+          leftover.push(wild);
+          wild = deck.pop();
+        }
+        if (!wild) continue;
+        s.wildCard = wild;
+        s.wildRank = wild.rank;
+        s.pond = leftover.concat(deck);
+        break;
+      }
+      sortHands(s);
+      SEATS.forEach(function (id) { autoLayNaturals(s, id); });
+      SEATS.forEach(function (id) { if (id !== "you") aiLayReadySets(s, id); });
+      s.turn = "you";
+      s.luckyFishReady = true;
+      s.turnText = "Your turn";
+      s.phase = "ask";
+      return s;
+    }
+
+    function newGame(seed) {
+      gen += 1;
+      const g = gen;
+      rng = typeof seed === "number" ? mulberry32(seed) : Math.random;
+      state = dealFresh();
+      render();
+      beginTurn(g, "you");
+    }
+
+    function fillSet(rank, extras) {
+      const suits = SUITS.slice();
+      const cards = suits.slice(0, 4 - (extras || []).length).map(function (s) {
+        return makeCard(rank, s, false);
+      });
+      return cards.concat(extras || []);
+    }
+
+    function startFixture(name, opts) {
+      opts = opts || {};
+      gen += 1;
+      const g = gen;
+      rng = typeof opts.seed === "number" ? mulberry32(opts.seed) : Math.random;
+      const s = blankState();
+      if (name === "demo") {
+        s.wildCard = makeCard("Q", "hearts", false);
+        s.wildRank = "Q";
+        s.players.you.sets = [{ rank: "A", cards: fillSet("A") }];
+        s.laidRanks.A = "you";
+        s.players.pip.sets = [{ rank: "K", cards: [makeCard("K", "spades"), makeCard("K", "hearts"), makeCard("K", "diamonds"), makeCard(null, null, true)] }];
+        s.laidRanks.K = "pip";
+        s.players.you.hand = [
+          makeCard("3", "diamonds"),
+          makeCard("7", "hearts"),
+          makeCard("7", "spades"),
+          makeCard("Q", "diamonds"),
+          makeCard("K", "clubs"),
+          makeCard(null, null, true),
+        ];
+        s.players.dot.hand = [makeCard("2", "clubs"), makeCard("4", "hearts"), makeCard("5", "spades"), makeCard("8", "diamonds"), makeCard("9", "clubs")];
+        s.players.pip.hand = [makeCard("2", "diamonds"), makeCard("4", "spades"), makeCard("5", "hearts"), makeCard("8", "clubs")];
+        s.players.finn.hand = [makeCard("2", "hearts"), makeCard("4", "diamonds"), makeCard("5", "clubs"), makeCard("8", "spades"), makeCard("9", "hearts"), makeCard("J", "clubs")];
+        const used = {};
+        function mark(c) { if (!c.joker) used[c.rank + c.suit] = true; }
+        SEATS.forEach(function (id) {
+          s.players[id].hand.forEach(mark);
+          s.players[id].sets.forEach(function (set) { set.cards.forEach(mark); });
+        });
+        mark(s.wildCard);
+        const pond = [];
+        RANKS.forEach(function (r) {
+          SUITS.forEach(function (su) {
+            if (!used[r + su]) pond.push(makeCard(r, su, false));
+          });
+        });
+        s.pond = pond.slice(0, 27);
+        s.selectedRank = "7";
+        s.phase = "pick-target";
+        s.turnText = "Tap a player to ask for 7s.";
+        sortHands(s);
+        state = s;
+        render();
+        showToast("Tap a player to ask for 7s.");
+        return g;
+      }
+      if (name === "empty-pond") {
+        s.wildCard = makeCard("Q", "hearts", false);
+        s.wildRank = "Q";
+        s.players.you.sets = [
+          { rank: "A", cards: fillSet("A") },
+          { rank: "K", cards: fillSet("K") },
+        ];
+        s.laidRanks.A = "you";
+        s.laidRanks.K = "you";
+        s.players.you.hand = [
+          makeCard("7", "spades"),
+          makeCard("7", "hearts"),
+          makeCard("7", "diamonds"),
+          makeCard(null, null, true),
+          makeCard("3", "clubs"),
+        ];
+        s.players.dot.hand = [];
+        s.players.pip.hand = [];
+        s.players.finn.hand = [];
+        s.pond = [];
+        s.turn = "you";
+        s.phase = "ask";
+        s.turnText = "Your turn";
+        s.luckyFishReady = true;
+        sortHands(s);
+        state = s;
+        render();
+        beginTurn(g, "you");
+        return g;
+      }
+      if (name === "lucky-fish") {
+        s.wildCard = makeCard("Q", "hearts", false);
+        s.wildRank = "Q";
+        s.players.you.hand = [makeCard("7", "spades"), makeCard("3", "clubs")];
+        s.players.dot.hand = [makeCard("9", "clubs")];
+        s.players.pip.hand = [makeCard("9", "spades")];
+        s.players.finn.hand = [makeCard("9", "hearts")];
+        s.pond = [makeCard("2", "clubs"), makeCard("7", "diamonds"), makeCard("7", "hearts")];
+        s.turn = "you";
+        s.phase = "ask";
+        s.turnText = "Your turn";
+        s.luckyFishReady = true;
+        sortHands(s);
+        state = s;
+        render();
+        beginTurn(g, "you");
+        return g;
+      }
+      if (name === "autolay") {
+        s.wildCard = makeCard("Q", "hearts", false);
+        s.wildRank = "Q";
+        s.players.you.hand = [
+          makeCard("A", "spades"),
+          makeCard("A", "hearts"),
+          makeCard("A", "diamonds"),
+          makeCard("5", "clubs"),
+        ];
+        s.players.dot.hand = [makeCard("A", "clubs")];
+        s.players.pip.hand = [makeCard("6", "spades")];
+        s.players.finn.hand = [makeCard("6", "hearts")];
+        s.pond = [makeCard("2", "clubs")];
+        sortHands(s);
+        state = s;
+        render();
+        beginTurn(g, "you");
+        return g;
+      }
+      if (name === "layset") {
+        s.wildCard = makeCard("Q", "hearts", false);
+        s.wildRank = "Q";
+        s.players.you.hand = [
+          makeCard("A", "spades"),
+          makeCard("A", "hearts"),
+          makeCard("A", "diamonds"),
+          makeCard(null, null, true),
+          makeCard("5", "clubs"),
+        ];
+        s.players.dot.hand = [makeCard("8", "clubs")];
+        s.players.pip.hand = [makeCard("6", "spades")];
+        s.players.finn.hand = [makeCard("6", "hearts")];
+        s.pond = [makeCard("2", "clubs")];
+        sortHands(s);
+        state = s;
+        render();
+        beginTurn(g, "you");
+        return g;
+      }
+      if (name === "wild-fill") {
+        s.wildCard = makeCard("Q", "hearts", false);
+        s.wildRank = "Q";
+        s.players.you.hand = [
+          makeCard("7", "spades"),
+          makeCard("7", "hearts"),
+          makeCard("7", "diamonds"),
+          makeCard("Q", "clubs"),
+        ];
+        s.players.dot.hand = [makeCard("8", "clubs")];
+        s.players.pip.hand = [makeCard("6", "spades")];
+        s.players.finn.hand = [makeCard("6", "hearts")];
+        s.pond = [];
+        sortHands(s);
+        state = s;
+        render();
+        beginTurn(g, "you");
+        return g;
+      }
+      state = dealFresh();
+      render();
+      beginTurn(g, "you");
+      return g;
+    }
+
+    function onRankTap(rank) {
+      if (!state || state.phase === "over" || state.turn !== "you") return;
+      if (state.busy && state.phase !== "ask" && state.phase !== "pick-target") return;
+      if (!legalRanks(state, "you").includes(rank)) return;
+      if (state.selectedRank === rank) {
+        state.selectedRank = null;
+        state.phase = "ask";
+        state.turnText = "Your turn";
+        render();
+        return;
+      }
+      state.selectedRank = rank;
+      state.phase = "pick-target";
+      state.turnText = "Tap a player to ask for " + pluralRank(rank) + ".";
+      showToast("Tap a player to ask for " + pluralRank(rank) + ".");
+      render();
+    }
+
+    function onSeatTap(targetId) {
+      if (!state || state.phase !== "pick-target" || state.turn !== "you") return;
+      if (targetId === "you" || !state.selectedRank) return;
+      const rank = state.selectedRank;
+      performAsk(gen, "you", targetId, rank);
+    }
+
+    function onLay(rank) {
+      if (!state || state.phase === "over" || state.transferring) return;
+      const manual = collectSets(state, "you").manual;
+      const set = manual.find(function (x) { return x.rank === rank; });
+      if (!set) return;
+      showToast("You laid " + pluralRank(set.rank) + ".");
+      laySet(state, "you", set);
+      if (state.selectedRank === rank) {
+        state.selectedRank = null;
+        if (state.phase === "pick-target") {
+          state.phase = "ask";
+          state.turnText = "Your turn";
+        }
+      }
+      maybeEnd(state);
+      render();
+    }
+
+    document.getElementById("hand").addEventListener("click", function (e) {
+      const lay = e.target.closest("[data-action=lay]");
+      if (lay) {
+        e.preventDefault();
+        e.stopPropagation();
+        onLay(lay.getAttribute("data-rank"));
+        return;
+      }
+      const group = e.target.closest(".rank-group[data-rank]");
+      if (group) onRankTap(group.getAttribute("data-rank"));
+    });
+    document.querySelector(".board").addEventListener("click", function (e) {
+      const seat = e.target.closest("[data-seat]");
+      if (seat) onSeatTap(seat.getAttribute("data-seat"));
+    });
+    document.getElementById("win-overlay").addEventListener("click", function (e) {
+      if (e.target.closest("[data-action=again]")) newGame();
+    });
+
+    window.addEventListener("resize", function () { if (state) fitHand(); });
+
+    window.__megaFish = {
+      getState: function () { return state; },
+      delays: delays,
+      newGame: newGame,
+      startFixture: startFixture,
+      legalRanks: function (id) { return legalRanks(state, id || "you"); },
+      collectSets: function (id) { return collectSets(state, id || "you"); },
+      names: NAMES,
+    };
+
+    newGame();
+  })();
+  </script>
+</body>
+</html>

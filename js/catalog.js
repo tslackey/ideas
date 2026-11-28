@@ -37,4 +37,11 @@ window.IDEAS = [
     date: "2026-11-25",
     tag: "scene",
   },
+  {
+    slug: "mega-fish",
+    title: "Mega Fish",
+    blurb: "A four-player Go Fish with jokers, a wild rank, and a race to three sets. You versus three simple opponents.",
+    date: "2026-11-28",
+    tag: "game",
+  },
 ];
