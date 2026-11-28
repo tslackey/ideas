@@ -573,6 +573,110 @@
     }
     .win-settings .settings-label { margin-bottom: 8px; }
     [data-action="again"] { margin-top: 14px; }
+
+    .seat, .you-tray { position: relative; }
+    .you-tray { z-index: 5; }
+    .bubble {
+      position: absolute;
+      z-index: 6;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--ui);
+      font-size: 13px;
+      font-weight: 650;
+      line-height: 1.25;
+      padding: 8px 12px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      max-width: 180px;
+      pointer-events: none;
+      text-align: center;
+      visibility: hidden;
+      opacity: 0;
+    }
+    .bubble.is-on { visibility: visible; opacity: 1; }
+    .bubble::after {
+      content: "";
+      position: absolute;
+      width: 0;
+      height: 0;
+      border: 7px solid transparent;
+    }
+    .seat-pip .bubble {
+      top: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .seat-pip .bubble.is-nudge-up { transform: translateX(-50%) translateY(-10px); }
+    .seat-pip .bubble.is-nudge-down { transform: translateX(-50%) translateY(10px); }
+    .seat-pip .bubble::after {
+      left: 50%;
+      bottom: 100%;
+      transform: translateX(-50%);
+      border-bottom-color: var(--paper);
+    }
+    .seat-dot .bubble {
+      left: calc(100% + 6px);
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .seat-dot .bubble.is-shift,
+    .seat-dot .bubble.is-nudge-up { transform: translateY(calc(-50% - 14px)); }
+    .seat-dot .bubble.is-nudge-down { transform: translateY(calc(-50% + 10px)); }
+    .seat-dot .bubble::after {
+      right: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      border-right-color: var(--paper);
+    }
+    .seat-finn .bubble {
+      right: calc(100% + 6px);
+      left: auto;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .seat-finn .bubble.is-shift,
+    .seat-finn .bubble.is-nudge-up { transform: translateY(calc(-50% - 14px)); }
+    .seat-finn .bubble.is-nudge-down { transform: translateY(calc(-50% + 10px)); }
+    .seat-finn .bubble::after {
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      border-left-color: var(--paper);
+    }
+    .you-tray .bubble {
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .you-tray .bubble.is-nudge-up { transform: translateX(-50%) translateY(-10px); }
+    .you-tray .bubble.is-nudge-down { transform: translateX(-50%) translateY(10px); }
+    .you-tray .bubble::after {
+      left: 50%;
+      top: 100%;
+      transform: translateX(-50%);
+      border-top-color: var(--paper);
+    }
+    .flight-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 15;
+      overflow: hidden;
+    }
+    .flight-clone {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform-origin: top left;
+      will-change: transform;
+    }
+    .flight-clone .card {
+      width: 100%;
+      height: 100%;
+      box-shadow: 0 10px 20px -8px rgba(36, 28, 20, 0.4);
+    }
+    .slot.is-arriving { background: rgba(255, 250, 243, 0.12); border: 1.5px solid var(--line); color: transparent; box-shadow: none; }
   </style>
 </head>
 <body>
@@ -600,19 +704,30 @@
       <div class="wild-badge" id="wild-badge"></div>
     </div>
     <div class="board">
-      <div class="seat seat-pip" data-seat="pip"></div>
-      <div class="seat seat-dot" data-seat="dot"></div>
+      <div class="seat seat-pip" data-seat="pip">
+        <div class="seat-main"></div>
+        <div class="bubble" data-bubble="pip" hidden><span class="bubble-text"></span></div>
+      </div>
+      <div class="seat seat-dot" data-seat="dot">
+        <div class="seat-main"></div>
+        <div class="bubble" data-bubble="dot" hidden><span class="bubble-text"></span></div>
+      </div>
       <div class="pond" id="pond"></div>
-      <div class="seat seat-finn" data-seat="finn"></div>
+      <div class="seat seat-finn" data-seat="finn">
+        <div class="seat-main"></div>
+        <div class="bubble" data-bubble="finn" hidden><span class="bubble-text"></span></div>
+      </div>
     </div>
     <div class="you-tray">
       <div class="set-slots" data-sets="you"></div>
       <div class="you-name">You</div>
+      <div class="bubble" data-bubble="you" hidden><span class="bubble-text"></span></div>
     </div>
     <div class="toast-row">
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </div>
     <div class="hand" id="hand"></div>
+    <div class="flight-layer" id="flight-layer" aria-hidden="true"></div>
   </div>
   <div class="win-overlay" id="win-overlay">
     <div class="win-card">
@@ -657,6 +772,22 @@
     function countPhrase(n, r) {
       return n === 1 ? "1 " + oneRank(r) : n + " " + pluralRank(r);
     }
+    const SPOKEN_ONE = { A: "ace", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "nine", "10": "ten", J: "jack", Q: "queen", K: "king" };
+    const SPOKEN_MANY = { A: "aces", "2": "twos", "3": "threes", "4": "fours", "5": "fives", "6": "sixes", "7": "sevens", "8": "eights", "9": "nines", "10": "tens", J: "jacks", Q: "queens", K: "kings" };
+    function spokenPhrase(n, r) {
+      return n === 1 ? "1 " + (SPOKEN_ONE[r] || r) : n + " " + (SPOKEN_MANY[r] || (r + "s"));
+    }
+    function askBubbleText(targetId, rank, askAll) {
+      const pl = pluralRank(rank);
+      if (askAll) return "Anyone got any " + pl + "?";
+      if (targetId === "you") return "Got any " + pl + "?";
+      return NAMES[targetId] + ", got any " + pl + "?";
+    }
+    function answerBubbleText(count, rank, emptyPond) {
+      if (count > 0) return "Here, " + spokenPhrase(count, rank);
+      if (emptyPond) return "Go fish! Pond's empty.";
+      return "Go fish!";
+    }
     function isRed(suit) { return suit === "hearts" || suit === "diamonds"; }
 
     function mulberry32(seed) {
@@ -672,8 +803,11 @@
 
     function delays() {
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (reduce) return { think: 150, hold: 150, draw: 150, chain: 150 };
-      return { think: 700, hold: 900, draw: 400, chain: 650 };
+      if (reduce) return { think: 150, ask: 150, answer: 150, flight: 150, stagger: 150, settle: 150, chain: 150, setLay: 150 };
+      return { think: 700, ask: 600, answer: 500, flight: 420, stagger: 70, settle: 250, chain: 500, setLay: 360 };
+    }
+    function isReducedMotion() {
+      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     }
 
     let rng = Math.random;
@@ -867,6 +1001,190 @@
       setTimeout(function () { el.classList.remove("is-pulse"); }, 1600);
     }
 
+    function hideBubbles() {
+      document.querySelectorAll(".bubble").forEach(function (el) {
+        el.hidden = true;
+        el.classList.remove("is-on", "is-nudge-up", "is-nudge-down", "is-shift");
+        const txt = el.querySelector(".bubble-text");
+        if (txt) txt.textContent = "";
+      });
+    }
+    function bubbleEl(seatId) {
+      return document.querySelector('[data-bubble="' + seatId + '"]');
+    }
+    function showBubble(seatId, text) {
+      const el = bubbleEl(seatId);
+      if (!el) return null;
+      el.querySelector(".bubble-text").textContent = text;
+      el.hidden = false;
+      el.classList.add("is-on");
+      // Shift Dot/Finn up if the bubble would hit the tray, toast, or hand
+      if (seatId === "dot" || seatId === "finn") {
+        const br = el.getBoundingClientRect();
+        const tray = document.querySelector(".you-tray").getBoundingClientRect();
+        const hand = document.getElementById("hand").getBoundingClientRect();
+        const toast = document.querySelector(".toast-row").getBoundingClientRect();
+        if (br.bottom > tray.top - 4 || br.bottom > toast.top - 4 || br.bottom > hand.top - 4) {
+          el.classList.add("is-shift");
+        }
+      }
+      return el;
+    }
+    function nudgeIfNeeded(askerId, answerIds) {
+      answerIds.forEach(function (aid) {
+        const pair = (askerId === "dot" && aid === "finn") || (askerId === "finn" && aid === "dot");
+        if (!pair) return;
+        const a = bubbleEl(askerId);
+        const b = bubbleEl(aid);
+        if (a) a.classList.add("is-nudge-up");
+        if (b) b.classList.add("is-nudge-down");
+      });
+    }
+    function clearFlights() {
+      const layer = document.getElementById("flight-layer");
+      if (layer) layer.innerHTML = "";
+    }
+    function rectOf(el) {
+      return el ? el.getBoundingClientRect() : { left: 0, top: 0, width: 40, height: 56, right: 40, bottom: 56 };
+    }
+    function cardRectById(id) {
+      return document.querySelector('[data-card="' + id + '"]');
+    }
+    function fanRect(playerId) {
+      return rectOf(document.querySelector('[data-fan="' + playerId + '"]') || document.querySelector('[data-seat="' + playerId + '"]'));
+    }
+    function pondRect() {
+      return rectOf(document.querySelector(".pool .stack") || document.querySelector(".pool"));
+    }
+    function handRect() {
+      return rectOf(document.getElementById("hand"));
+    }
+    function slotRect(playerId, index) {
+      const root = playerId === "you" ? document.querySelector(".you-tray") : document.querySelector('[data-seat="' + playerId + '"]');
+      const slots = root.querySelectorAll(".slot");
+      return rectOf(slots[index] || slots[0]);
+    }
+    function offsetRect(base, i) {
+      return {
+        left: base.left + i * 4,
+        top: base.top + i * 3,
+        width: base.width || 28,
+        height: base.height || 40,
+        right: (base.left + i * 4) + (base.width || 28),
+        bottom: (base.top + i * 3) + (base.height || 40)
+      };
+    }
+    function sourceRectsFor(playerId, cards) {
+      if (playerId === "you") {
+        return cards.map(function (c, i) {
+          const el = cardRectById(c.id);
+          return el ? el.getBoundingClientRect() : offsetRect(handRect(), i);
+        });
+      }
+      const fan = fanRect(playerId);
+      const unit = { left: fan.left, top: fan.top, width: 28, height: 40, right: fan.left + 28, bottom: fan.top + 40 };
+      return cards.map(function (_c, i) { return offsetRect(unit, i); });
+    }
+    function destRectFor(playerId) {
+      if (playerId === "you") {
+        const hand = document.getElementById("hand");
+        const cards = hand.querySelectorAll(".card");
+        if (cards.length) return cards[cards.length - 1].getBoundingClientRect();
+        return handRect();
+      }
+      const fan = fanRect(playerId);
+      return { left: fan.left, top: fan.top, width: 28, height: 40, right: fan.left + 28, bottom: fan.top + 40 };
+    }
+
+    function flyCardGroup(g, cards, srcRects, destRect, opts) {
+      opts = opts || {};
+      const d = delays();
+      if (isReducedMotion()) {
+        return sleep(d.flight);
+      }
+      const layer = document.getElementById("flight-layer");
+      const tableRect = document.getElementById("table").getBoundingClientRect();
+      const clones = [];
+      cards.forEach(function (card, i) {
+        const src = srcRects[i] || srcRects[0] || destRect;
+        const wrap = document.createElement("div");
+        wrap.className = "flight-clone";
+        wrap.style.width = src.width + "px";
+        wrap.style.height = src.height + "px";
+        wrap.innerHTML = cardFaceHTML(card, { back: !opts.faceUp, button: false });
+        layer.appendChild(wrap);
+        const x0 = src.left - tableRect.left;
+        const y0 = src.top - tableRect.top;
+        const x1 = destRect.left - tableRect.left + (i * 3);
+        const y1 = destRect.top - tableRect.top + (i * 2);
+        const sx = destRect.width / (src.width || destRect.width);
+        const sy = destRect.height / (src.height || destRect.height);
+        const rot = (opts.rotate || 10) * (i % 2 ? -1 : 1);
+        const kf = [
+          { transform: "translate(" + x0 + "px, " + y0 + "px) scale(1, 1) rotate(0deg)" },
+          { transform: "translate(" + ((x0 + x1) / 2) + "px, " + (((y0 + y1) / 2) - 16) + "px) scale(" + ((1 + sx) / 2) + ", " + ((1 + sy) / 2) + ") rotate(" + rot + "deg)" },
+          { transform: "translate(" + x1 + "px, " + y1 + "px) scale(" + sx + ", " + sy + ") rotate(0deg)" }
+        ];
+        const anim = wrap.animate(kf, {
+          duration: opts.duration || d.flight,
+          delay: i * d.stagger,
+          easing: "cubic-bezier(0.2, 0.7, 0.2, 1)",
+          fill: "forwards"
+        });
+        clones.push({ wrap: wrap, anim: anim });
+      });
+      const last = clones[clones.length - 1];
+      const done = last
+        ? last.anim.finished.catch(function () {})
+        : sleep(d.flight);
+      return done.then(function () {
+        if (g !== gen) { clearFlights(); return false; }
+        clones.forEach(function (c) { if (c.wrap.parentNode) c.wrap.remove(); });
+        return true;
+      });
+    }
+
+    async function flyLaidSets(g, playerId, sets) {
+      if (!sets || !sets.length) return;
+      for (let i = 0; i < sets.length; i++) {
+        const set = sets[i];
+        const src = set.srcRects || sourceRectsFor(playerId, set.cards);
+        const index = state.players[playerId].sets.indexOf(set.ref) >= 0
+          ? state.players[playerId].sets.indexOf(set.ref)
+          : (state.players[playerId].sets.length - sets.length + i);
+        state.arrivingSet = { playerId: playerId, index: index };
+        render();
+        const dest = slotRect(playerId, index);
+        const ok = await flyCardGroup(g, set.cards, src, dest, {
+          faceUp: playerId === "you",
+          duration: delays().setLay
+        });
+        if (!ok && g !== gen) return;
+        state.arrivingSet = null;
+        render();
+        const who = playerId === "you" ? "You" : NAMES[playerId];
+        showToast(who + " laid " + pluralRank(set.rank) + ".");
+        const settled = await sleep(Math.min(180, delays().settle));
+        if (!settled || gen !== g) return;
+      }
+    }
+
+    function takePlayLays(s, playerId) {
+      const out = [];
+      let safety = 0;
+      while (safety++ < 8) {
+        const found = collectSets(s, playerId);
+        const next = found.auto[0] || (playerId !== "you" ? found.manual[0] : null);
+        if (!next) break;
+        const srcRects = sourceRectsFor(playerId, next.cards);
+        laySet(s, playerId, next);
+        const ref = s.players[playerId].sets[s.players[playerId].sets.length - 1];
+        out.push({ rank: next.rank, cards: next.cards, srcRects: srcRects, ref: ref });
+      }
+      return out;
+    }
+
+
     function cardFaceHTML(card, opts) {
       opts = opts || {};
       if (opts.back) {
@@ -889,16 +1207,19 @@
         "</" + close + ">";
     }
 
-    function renderSlots(el, sets) {
+    function renderSlots(el, sets, playerId) {
       let html = "";
+      const arriving = state && state.arrivingSet && state.arrivingSet.playerId === playerId
+        ? state.arrivingSet.index
+        : -1;
       for (let i = 0; i < 3; i++) {
         const set = sets[i];
-        if (set) {
+        if (set && i !== arriving) {
           const sample = set.cards.find(function (c) { return !c.joker && c.rank === set.rank; }) || set.cards[0];
           const red = sample && isRed(sample.suit) ? " is-red" : "";
           html += '<div class="slot is-filled' + red + '" data-set-rank="' + set.rank + '">' + set.rank + "</div>";
         } else {
-          html += '<div class="slot"></div>';
+          html += '<div class="slot' + (i === arriving ? " is-arriving" : "") + '"></div>';
         }
       }
       el.innerHTML = html;
@@ -913,11 +1234,17 @@
       const show = Math.min(n, 7);
       let fan = "";
       for (let i = 0; i < show; i++) fan += cardFaceHTML(null, { back: true });
-      el.innerHTML =
+      let main = el.querySelector(".seat-main");
+      if (!main) {
+        main = document.createElement("div");
+        main.className = "seat-main";
+        el.insertBefore(main, el.firstChild);
+      }
+      main.innerHTML =
         '<div class="seat-name">' + NAMES[id] + ' <span class="count" data-count="' + id + '">' + n + "</span></div>" +
         '<div class="fan" data-fan="' + id + '">' + fan + "</div>" +
         '<div class="set-slots" data-sets="' + id + '"></div>';
-      renderSlots(el.querySelector("[data-sets]"), p.sets);
+      renderSlots(main.querySelector("[data-sets]"), p.sets, id);
     }
 
     function renderWild() {
@@ -1011,7 +1338,7 @@
       renderSeat("dot");
       renderSeat("finn");
       renderPond();
-      renderSlots(document.querySelector('.you-tray [data-sets="you"]'), state.players.you.sets);
+      renderSlots(document.querySelector('.you-tray [data-sets="you"]'), state.players.you.sets, "you");
       renderHand();
       renderWin();
       fitHand();
@@ -1026,6 +1353,8 @@
       if (s.phase === "over") {
         s.busy = false;
         s.selectedRank = null;
+        hideBubbles();
+        clearFlights();
         finishHeadline(s);
         render();
         return true;
@@ -1051,8 +1380,15 @@
 
     async function beginTurn(g, id) {
       if (gen !== g || state.phase === "over") return;
+      hideBubbles();
       if (id !== "you") {
-        if (aiLayReadySets(state, id) && maybeEnd(state)) return;
+        const openingLays = takePlayLays(state, id);
+        if (openingLays.length) {
+          state.busy = true;
+          await flyLaidSets(g, id, openingLays);
+          if (gen !== g) return;
+          if (maybeEnd(state)) return;
+        }
       }
       if (!canAsk(state, id)) {
         state.skippedStreak += 1;
@@ -1096,13 +1432,26 @@
       await beginTurn(g, next);
     }
 
-    function formatGiveToast(askerId, gifts, rank) {
-      const parts = gifts.map(function (g) {
-        if (g.from === "you") return "You give " + NAMES[askerId] + " " + countPhrase(g.count, rank);
-        if (askerId === "you") return NAMES[g.from] + " gives you " + countPhrase(g.count, rank);
-        return NAMES[g.from] + " gives " + NAMES[askerId] + " " + countPhrase(g.count, rank);
-      });
-      return parts.join(". ") + ".";
+    async function finishSuccessfulAsk(g, askerId) {
+      state.luckyFishReady = true;
+      state.inLuckyFishTurn = false;
+      state.skippedStreak = 0;
+      if (maybeEnd(state)) return true;
+      if (!canAsk(state, askerId)) {
+        await endTurn(g, askerId);
+        return true;
+      }
+      if (askerId === "you") {
+        state.phase = "ask";
+        state.turnText = "Your turn";
+        state.busy = false;
+        render();
+        return true;
+      }
+      const okChain = await sleep(delays().chain);
+      if (!okChain || gen !== g) return true;
+      await aiAsk(g, askerId);
+      return true;
     }
 
     async function performAsk(g, askerId, targetId, rank) {
@@ -1115,87 +1464,101 @@
       state.transferring = true;
       state.selectedRank = null;
       const asker = state.players[askerId];
-      const askMsg = askAll
-        ? (askerId === "you"
-          ? "You asked everyone for " + pluralRank(rank) + "."
-          : NAMES[askerId] + " asked everyone for " + pluralRank(rank) + ".")
-        : (askerId === "you"
-          ? "You asked " + NAMES[targetId] + " for " + pluralRank(rank) + "."
-          : NAMES[askerId] + " asked " + (targetId === "you" ? "you" : NAMES[targetId]) + " for " + pluralRank(rank) + ".");
-      showToast(askMsg);
       if (askerId !== "you") state.turnText = NAMES[askerId] + " is asking…";
+      hideBubbles();
       render();
-      if (askerId !== "you") {
-        const okHold = await sleep(delays().hold);
-        if (!okHold || gen !== g) return;
-      }
+      showBubble(askerId, askBubbleText(targetId, rank, askAll));
+      const okAsk = await sleep(delays().ask);
+      if (!okAsk || gen !== g) return;
 
       const gifts = [];
       targets.forEach(function (tid) {
-        const target = state.players[tid];
-        const given = target.hand.filter(function (c) { return isNatural(c, rank); });
+        const given = state.players[tid].hand.filter(function (c) { return isNatural(c, rank); });
         if (!given.length) return;
-        target.hand = target.hand.filter(function (c) { return !isNatural(c, rank); });
-        asker.hand.push.apply(asker.hand, given);
-        gifts.push({ from: tid, count: given.length });
+        gifts.push({ from: tid, cards: given.slice(), srcRects: sourceRectsFor(tid, given) });
       });
       gifts.sort(function (a, b) {
         return TOAST_ORDER.indexOf(a.from) - TOAST_ORDER.indexOf(b.from);
       });
+
       if (gifts.length) {
+        gifts.forEach(function (gift) {
+          showBubble(gift.from, answerBubbleText(gift.cards.length, rank, false));
+        });
+        nudgeIfNeeded(askerId, gifts.map(function (gift) { return gift.from; }));
+        const okAns = await sleep(delays().answer);
+        if (!okAns || gen !== g) return;
+
+        gifts.forEach(function (gift) {
+          const ids = {};
+          gift.cards.forEach(function (c) { ids[c.id] = true; });
+          state.players[gift.from].hand = state.players[gift.from].hand.filter(function (c) { return !ids[c.id]; });
+        });
+        render();
+        const dest = destRectFor(askerId);
+        await Promise.all(gifts.map(function (gift, gi) {
+          return flyCardGroup(g, gift.cards, gift.srcRects, dest, {
+            faceUp: askerId === "you" || gift.from === "you",
+            rotate: 10 + gi
+          });
+        }));
+        if (gen !== g) return;
+        gifts.forEach(function (gift) {
+          asker.hand.push.apply(asker.hand, gift.cards);
+        });
         sortHand(asker.hand);
-        showToast(formatGiveToast(askerId, gifts, rank));
         state.transferring = false;
         render();
-        const okDraw = await sleep(delays().draw);
-        if (!okDraw || gen !== g) return;
-        autoLayNaturals(state, askerId);
-        if (askerId !== "you") aiLayReadySets(state, askerId);
-        state.luckyFishReady = true;
-        state.inLuckyFishTurn = false;
-        state.skippedStreak = 0;
-        if (maybeEnd(state)) return;
-        if (!canAsk(state, askerId)) {
-          await endTurn(g, askerId);
-          return;
-        }
-        if (askerId === "you") {
-          state.phase = "ask";
-          state.turnText = "Your turn";
-          state.busy = false;
-          render();
-          return;
-        }
-        const okChain = await sleep(delays().chain);
-        if (!okChain || gen !== g) return;
-        await aiAsk(g, askerId);
+        const okSettle = await sleep(delays().settle);
+        if (!okSettle || gen !== g) return;
+        hideBubbles();
+        const laid = takePlayLays(state, askerId);
+        await flyLaidSets(g, askerId, laid);
+        if (gen !== g) return;
+        await finishSuccessfulAsk(g, askerId);
         return;
       }
 
-      if (state.pond.length === 0) {
-        showToast("Go fish. The pond is empty.");
+      const empty = state.pond.length === 0;
+      if (askAll) {
+        targets.forEach(function (tid) { showBubble(tid, answerBubbleText(0, rank, empty)); });
+        nudgeIfNeeded(askerId, targets);
+      } else {
+        showBubble(targets[0], answerBubbleText(0, rank, empty));
+        nudgeIfNeeded(askerId, targets);
+      }
+      const okAns2 = await sleep(delays().answer);
+      if (!okAns2 || gen !== g) return;
+
+      if (empty) {
         state.transferring = false;
         state.luckyFishReady = true;
         state.inLuckyFishTurn = false;
         state.skippedStreak = 0;
-        render();
-        const okEmpty = await sleep(Math.max(delays().hold, delays().draw));
+        const okEmpty = await sleep(delays().settle);
         if (!okEmpty || gen !== g) return;
+        hideBubbles();
         await endTurn(g, askerId);
         return;
       }
-      showToast("Go fish");
-      render();
-      const okPause = await sleep(delays().draw);
-      if (!okPause || gen !== g) return;
+
+      const srcPond = pondRect();
       const drawn = state.pond.pop();
+      render();
+      const destPond = destRectFor(askerId);
+      await flyCardGroup(g, [drawn], [srcPond], destPond, { faceUp: askerId === "you" });
+      if (gen !== g) return;
       asker.hand.push(drawn);
       sortHand(asker.hand);
       const lucky = isNatural(drawn, rank);
       state.transferring = false;
       render();
-      autoLayNaturals(state, askerId);
-      if (askerId !== "you") aiLayReadySets(state, askerId);
+      const okSettle2 = await sleep(delays().settle);
+      if (!okSettle2 || gen !== g) return;
+      hideBubbles();
+      const laid2 = takePlayLays(state, askerId);
+      await flyLaidSets(g, askerId, laid2);
+      if (gen !== g) return;
       if (maybeEnd(state)) return;
       if (lucky && state.luckyFishReady) {
         showToast("Lucky fish! Extra turn");
@@ -1277,6 +1640,8 @@
     function newGame(seed) {
       gen += 1;
       const g = gen;
+      hideBubbles();
+      clearFlights();
       rng = typeof seed === "number" ? mulberry32(seed) : Math.random;
       state = dealFresh();
       render();
@@ -1295,6 +1660,8 @@
       opts = opts || {};
       gen += 1;
       const g = gen;
+      hideBubbles();
+      clearFlights();
       rng = typeof opts.seed === "number" ? mulberry32(opts.seed) : Math.random;
       const s = blankState();
       if (name === "demo") {
@@ -1496,15 +1863,67 @@
         beginTurn(g, "you");
         return g;
       }
+      if (name === "v2-shot") {
+        s.wildCard = makeCard("Q", "hearts", false);
+        s.wildRank = "Q";
+        s.players.you.sets = [{ rank: "A", cards: fillSet("A") }];
+        s.laidRanks.A = "you";
+        s.players.you.hand = [
+          makeCard("3", "diamonds"),
+          makeCard("7", "hearts"),
+          makeCard("7", "spades"),
+          makeCard("Q", "diamonds"),
+          makeCard("K", "clubs"),
+          makeCard(null, null, true)
+        ];
+        s.players.pip.hand = [makeCard("7", "diamonds"), makeCard("7", "clubs"), makeCard("2", "spades"), makeCard("4", "hearts")];
+        s.players.dot.hand = [makeCard("2", "clubs"), makeCard("4", "spades"), makeCard("5", "hearts"), makeCard("8", "diamonds"), makeCard("9", "clubs")];
+        s.players.finn.hand = [makeCard("2", "hearts"), makeCard("4", "diamonds"), makeCard("5", "clubs"), makeCard("8", "spades"), makeCard("9", "hearts"), makeCard("J", "clubs")];
+        s.pond = [];
+        for (let i = 0; i < 27; i++) s.pond.push(makeCard("10", "spades"));
+        s.turn = "you";
+        s.phase = "ask";
+        s.turnText = "Your turn";
+        sortHands(s);
+        state = s;
+        render();
+        return g;
+      }
       state = dealFresh();
       render();
       beginTurn(g, "you");
       return g;
     }
 
+    function stageReadabilityShot() {
+      hideBubbles();
+      clearFlights();
+      startFixture("v2-shot");
+      showBubble("you", "Pip, got any 7s?");
+      showBubble("pip", "Here, 2 sevens");
+      const pipFan = fanRect("pip");
+      const hand = handRect();
+      const sevens = state.players.pip.hand.filter(function (c) { return c.rank === "7"; });
+      const tableRect = document.getElementById("table").getBoundingClientRect();
+      const layer = document.getElementById("flight-layer");
+      sevens.forEach(function (card, i) {
+        const src = offsetRect({ left: pipFan.left, top: pipFan.top, width: 28, height: 40 }, i);
+        const dest = { left: hand.left + hand.width * 0.45 + i * 18, top: hand.top - 90 - i * 10, width: 70, height: 98 };
+        const midX = (src.left + dest.left) / 2 - tableRect.left;
+        const midY = (src.top + dest.top) / 2 - tableRect.top - 16;
+        const wrap = document.createElement("div");
+        wrap.className = "flight-clone is-shot";
+        wrap.style.width = "70px";
+        wrap.style.height = "98px";
+        wrap.style.transform = "translate(" + midX + "px, " + midY + "px) rotate(" + (10 * (i % 2 ? -1 : 1)) + "deg)";
+        wrap.innerHTML = cardFaceHTML(card, { back: false, button: false });
+        layer.appendChild(wrap);
+      });
+    }
+
     function onRankTap(rank) {
       if (!state || state.phase === "over" || state.turn !== "you") return;
-      if (state.busy && state.phase !== "ask" && state.phase !== "pick-target") return;
+      if (state.busy) return;
       if (!legalRanks(state, "you").includes(rank)) return;
       if (askMode === "all") {
         performAsk(gen, "you", "all", rank);
@@ -1525,18 +1944,21 @@
     }
 
     function onSeatTap(targetId) {
-      if (!state || state.phase !== "pick-target" || state.turn !== "you") return;
+      if (!state || state.busy || state.phase !== "pick-target" || state.turn !== "you") return;
       if (targetId === "you" || !state.selectedRank) return;
       const rank = state.selectedRank;
       performAsk(gen, "you", targetId, rank);
     }
 
-    function onLay(rank) {
-      if (!state || state.phase === "over" || state.transferring) return;
+    async function onLay(rank) {
+      if (!state || state.phase === "over" || state.busy || state.transferring) return;
       const manual = collectSets(state, "you").manual;
       const set = manual.find(function (x) { return x.rank === rank; });
       if (!set) return;
-      showToast("You laid " + pluralRank(set.rank) + ".");
+      const g = gen;
+      state.busy = true;
+      const srcRects = sourceRectsFor("you", set.cards);
+      const index = state.players.you.sets.length;
       laySet(state, "you", set);
       if (state.selectedRank === rank) {
         state.selectedRank = null;
@@ -1545,7 +1967,17 @@
           state.turnText = "Your turn";
         }
       }
+      state.arrivingSet = { playerId: "you", index: index };
+      render();
+      await flyCardGroup(g, set.cards, srcRects, slotRect("you", index), {
+        faceUp: true,
+        duration: delays().setLay
+      });
+      if (gen !== g) return;
+      state.arrivingSet = null;
+      showToast("You laid " + pluralRank(set.rank) + ".");
       maybeEnd(state);
+      if (state.phase !== "over") state.busy = false;
       render();
     }
 
@@ -1625,6 +2057,11 @@
       getAskMode: function () { return askMode; },
       setAskMode: setAskMode,
       setSettingsOpen: setSettingsOpen,
+      hideBubbles: hideBubbles,
+      showBubble: showBubble,
+      stageReadabilityShot: stageReadabilityShot,
+      spokenPhrase: spokenPhrase,
+      askBubbleText: askBubbleText,
     };
 
     newGame();
