@@ -499,14 +499,102 @@
       cursor: pointer;
     }
     [data-action="again"]:active { background: var(--accent-deep); }
+
+    .bar-end {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      pointer-events: auto;
+    }
+    .settings-btn {
+      width: 32px;
+      height: 32px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--paper);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+    .settings-btn:hover,
+    .settings-btn[aria-expanded="true"] {
+      background: rgba(255, 250, 243, 0.14);
+    }
+    .settings-pop {
+      position: absolute;
+      top: calc(44px + env(safe-area-inset-top, 0px));
+      right: calc(10px + env(safe-area-inset-right, 0px));
+      z-index: 8;
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: var(--shadow);
+      min-width: 196px;
+    }
+    .settings-pop[hidden] { display: none; }
+    .settings-label {
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 8px;
+    }
+    .ask-toggle {
+      display: flex;
+      background: var(--cream);
+      border-radius: 999px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .ask-toggle button {
+      flex: 1;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .ask-toggle button[aria-checked="true"] {
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: var(--shadow);
+    }
+    .win-settings {
+      margin: 16px 0 0;
+      text-align: left;
+    }
+    .win-settings .settings-label { margin-bottom: 8px; }
+    [data-action="again"] { margin-top: 14px; }
   </style>
 </head>
 <body>
   <div class="table" id="table">
     <header class="idea-bar">
       <a href="../../">← ideas</a>
-      <span>Mega Fish</span>
+      <div class="bar-end">
+        <span>Mega Fish</span>
+        <button type="button" class="settings-btn" id="settings-btn" aria-label="Ask mode" aria-haspopup="dialog" aria-expanded="false" aria-controls="settings-pop">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.2 7.2 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.5.42l-.36 2.54c-.59.22-1.14.53-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.8 8.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.92 14.16a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.4.31.64.22l2.39-.96c.49.41 1.04.72 1.63.94l.36 2.54c.05.24.26.42.5.42h3.8c.24 0 .45-.18.5-.42l.36-2.54c.59-.22 1.14-.53 1.63-.94l2.39.96c.23.09.51 0 .64-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>
+          </svg>
+        </button>
+      </div>
     </header>
+    <div class="settings-pop" id="settings-pop" hidden role="dialog" aria-label="Settings">
+      <div class="settings-label">Ask mode</div>
+      <div class="ask-toggle" data-ask-toggle role="radiogroup" aria-label="Ask mode">
+        <button type="button" role="radio" data-ask-mode="one" aria-checked="true">Ask one</button>
+        <button type="button" role="radio" data-ask-mode="all" aria-checked="false">Ask all</button>
+      </div>
+    </div>
     <div class="hud">
       <div class="turn-pill" id="turn-pill" role="status">Your turn</div>
       <div class="wild-badge" id="wild-badge"></div>
@@ -530,6 +618,13 @@
     <div class="win-card">
       <h1 id="win-title">You win!</h1>
       <div class="win-seats" id="win-sets"></div>
+      <div class="win-settings">
+        <div class="settings-label">Ask mode</div>
+        <div class="ask-toggle" data-ask-toggle role="radiogroup" aria-label="Ask mode">
+          <button type="button" role="radio" data-ask-mode="one" aria-checked="true">Ask one</button>
+          <button type="button" role="radio" data-ask-mode="all" aria-checked="false">Ask all</button>
+        </div>
+      </div>
       <button type="button" data-action="again">Play again</button>
     </div>
   </div>
@@ -543,6 +638,17 @@
     const RANK_ONE = { A: "Ace", J: "Jack", Q: "Queen", K: "King" };
     const SEATS = ["you", "finn", "pip", "dot"];
     const NAMES = { you: "You", finn: "Finn", pip: "Pip", dot: "Dot" };
+    const ASK_MODE_KEY = "mega-fish-ask-mode";
+    const TOAST_ORDER = ["dot", "pip", "finn", "you"];
+
+    function loadAskMode() {
+      try {
+        const v = localStorage.getItem(ASK_MODE_KEY);
+        if (v === "all" || v === "one") return v;
+      } catch (err) {}
+      return "one";
+    }
+    let askMode = loadAskMode();
     const FISH = '<svg viewBox="0 0 48 32" aria-hidden="true"><path fill="currentColor" d="M30 16c0 7-6.5 12-14.5 12C8 28 2 22.5 2 16S8 4 15.5 4C23.5 4 30 9 30 16z"/><path fill="currentColor" d="M29 16l17-10v20L29 16z"/><circle cx="14" cy="13" r="2.3" fill="#fffaf3"/><path d="M10 18c2.4 3 7 3 9.2 0" fill="none" stroke="#fffaf3" stroke-width="1.7" stroke-linecap="round"/></svg>';
     const FISH_JOKER = '<svg viewBox="0 0 48 32" aria-hidden="true"><path fill="currentColor" d="M30 16c0 7-6.5 12-14.5 12C8 28 2 22.5 2 16S8 4 15.5 4C23.5 4 30 9 30 16z"/><path fill="currentColor" d="M29 16l17-10v20L29 16z"/><circle cx="14" cy="13" r="2.3" fill="#fffaf3"/><path d="M10 18c2.4 3 7 3 9.2 0" fill="none" stroke="#fffaf3" stroke-width="1.7" stroke-linecap="round"/></svg>';
 
@@ -990,18 +1096,32 @@
       await beginTurn(g, next);
     }
 
+    function formatGiveToast(askerId, gifts, rank) {
+      const parts = gifts.map(function (g) {
+        if (g.from === "you") return "You give " + NAMES[askerId] + " " + countPhrase(g.count, rank);
+        if (askerId === "you") return NAMES[g.from] + " gives you " + countPhrase(g.count, rank);
+        return NAMES[g.from] + " gives " + NAMES[askerId] + " " + countPhrase(g.count, rank);
+      });
+      return parts.join(". ") + ".";
+    }
+
     async function performAsk(g, askerId, targetId, rank) {
       if (gen !== g || state.phase === "over") return;
+      const askAll = targetId === "all";
+      const targets = askAll
+        ? SEATS.filter(function (id) { return id !== askerId; })
+        : [targetId];
       state.busy = true;
       state.transferring = true;
       state.selectedRank = null;
       const asker = state.players[askerId];
-      const target = state.players[targetId];
-      const askerName = askerId === "you" ? "You" : NAMES[askerId];
-      const targetName = targetId === "you" ? "you" : NAMES[targetId];
-      const askMsg = askerId === "you"
-        ? "You asked " + NAMES[targetId] + " for " + pluralRank(rank) + "."
-        : NAMES[askerId] + " asked " + targetName + " for " + pluralRank(rank) + ".";
+      const askMsg = askAll
+        ? (askerId === "you"
+          ? "You asked everyone for " + pluralRank(rank) + "."
+          : NAMES[askerId] + " asked everyone for " + pluralRank(rank) + ".")
+        : (askerId === "you"
+          ? "You asked " + NAMES[targetId] + " for " + pluralRank(rank) + "."
+          : NAMES[askerId] + " asked " + (targetId === "you" ? "you" : NAMES[targetId]) + " for " + pluralRank(rank) + ".");
       showToast(askMsg);
       if (askerId !== "you") state.turnText = NAMES[askerId] + " is asking…";
       render();
@@ -1010,15 +1130,21 @@
         if (!okHold || gen !== g) return;
       }
 
-      const given = target.hand.filter(function (c) { return isNatural(c, rank); });
-      if (given.length) {
+      const gifts = [];
+      targets.forEach(function (tid) {
+        const target = state.players[tid];
+        const given = target.hand.filter(function (c) { return isNatural(c, rank); });
+        if (!given.length) return;
         target.hand = target.hand.filter(function (c) { return !isNatural(c, rank); });
         asker.hand.push.apply(asker.hand, given);
+        gifts.push({ from: tid, count: given.length });
+      });
+      gifts.sort(function (a, b) {
+        return TOAST_ORDER.indexOf(a.from) - TOAST_ORDER.indexOf(b.from);
+      });
+      if (gifts.length) {
         sortHand(asker.hand);
-        const giveMsg = targetId === "you"
-          ? "You give " + NAMES[askerId] + " " + countPhrase(given.length, rank) + "."
-          : NAMES[targetId] + " gives " + (askerId === "you" ? "you" : NAMES[askerId]) + " " + countPhrase(given.length, rank) + ".";
-        showToast(giveMsg);
+        showToast(formatGiveToast(askerId, gifts, rank));
         state.transferring = false;
         render();
         const okDraw = await sleep(delays().draw);
@@ -1107,6 +1233,10 @@
         return;
       }
       const rank = ranks[Math.floor(rng() * ranks.length)];
+      if (askMode === "all") {
+        await performAsk(g, aiId, "all", rank);
+        return;
+      }
       const others = SEATS.filter(function (id) { return id !== aiId; });
       const target = others[Math.floor(rng() * others.length)];
       await performAsk(g, aiId, target, rank);
@@ -1314,6 +1444,58 @@
         beginTurn(g, "you");
         return g;
       }
+      if (name === "ask-all-multi") {
+        s.wildCard = makeCard("Q", "hearts", false);
+        s.wildRank = "Q";
+        s.players.you.hand = [makeCard("7", "spades"), makeCard("3", "clubs")];
+        s.players.dot.hand = [makeCard("7", "hearts")];
+        s.players.pip.hand = [makeCard("9", "spades")];
+        s.players.finn.hand = [makeCard("7", "diamonds"), makeCard("7", "clubs")];
+        s.pond = [makeCard("2", "clubs"), makeCard("4", "spades")];
+        s.turn = "you";
+        s.phase = "ask";
+        s.turnText = "Your turn";
+        sortHands(s);
+        state = s;
+        render();
+        beginTurn(g, "you");
+        return g;
+      }
+      if (name === "ask-all-miss") {
+        s.wildCard = makeCard("Q", "hearts", false);
+        s.wildRank = "Q";
+        s.players.you.hand = [makeCard("7", "spades"), makeCard("3", "clubs")];
+        s.players.dot.hand = [makeCard("9", "clubs")];
+        s.players.pip.hand = [makeCard("9", "spades")];
+        s.players.finn.hand = [makeCard("9", "hearts")];
+        s.pond = [makeCard("2", "clubs"), makeCard("4", "spades")];
+        s.turn = "you";
+        s.phase = "ask";
+        s.turnText = "Your turn";
+        sortHands(s);
+        state = s;
+        render();
+        beginTurn(g, "you");
+        return g;
+      }
+      if (name === "ask-all-lucky") {
+        s.wildCard = makeCard("Q", "hearts", false);
+        s.wildRank = "Q";
+        s.players.you.hand = [makeCard("7", "spades"), makeCard("3", "clubs")];
+        s.players.dot.hand = [makeCard("9", "clubs")];
+        s.players.pip.hand = [makeCard("9", "spades")];
+        s.players.finn.hand = [makeCard("9", "hearts")];
+        s.pond = [makeCard("2", "clubs"), makeCard("7", "diamonds"), makeCard("7", "hearts")];
+        s.turn = "you";
+        s.phase = "ask";
+        s.turnText = "Your turn";
+        s.luckyFishReady = true;
+        sortHands(s);
+        state = s;
+        render();
+        beginTurn(g, "you");
+        return g;
+      }
       state = dealFresh();
       render();
       beginTurn(g, "you");
@@ -1324,6 +1506,10 @@
       if (!state || state.phase === "over" || state.turn !== "you") return;
       if (state.busy && state.phase !== "ask" && state.phase !== "pick-target") return;
       if (!legalRanks(state, "you").includes(rank)) return;
+      if (askMode === "all") {
+        performAsk(gen, "you", "all", rank);
+        return;
+      }
       if (state.selectedRank === rank) {
         state.selectedRank = null;
         state.phase = "ask";
@@ -1382,6 +1568,50 @@
       if (e.target.closest("[data-action=again]")) newGame();
     });
 
+    function syncAskModeUI() {
+      document.querySelectorAll("[data-ask-mode]").forEach(function (btn) {
+        btn.setAttribute("aria-checked", btn.getAttribute("data-ask-mode") === askMode ? "true" : "false");
+      });
+    }
+    function setAskMode(mode) {
+      if (mode !== "one" && mode !== "all") return;
+      askMode = mode;
+      try { localStorage.setItem(ASK_MODE_KEY, mode); } catch (err) {}
+      syncAskModeUI();
+      if (state && state.phase === "pick-target" && state.turn === "you" && !state.transferring) {
+        state.selectedRank = null;
+        state.phase = "ask";
+        state.turnText = "Your turn";
+        render();
+      }
+    }
+    function setSettingsOpen(open) {
+      const btn = document.getElementById("settings-btn");
+      const pop = document.getElementById("settings-pop");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) pop.removeAttribute("hidden");
+      else pop.setAttribute("hidden", "");
+    }
+    document.getElementById("settings-btn").addEventListener("click", function (e) {
+      e.stopPropagation();
+      const open = document.getElementById("settings-btn").getAttribute("aria-expanded") !== "true";
+      setSettingsOpen(open);
+    });
+    document.addEventListener("click", function (e) {
+      const modeBtn = e.target.closest("[data-ask-mode]");
+      if (modeBtn) {
+        setAskMode(modeBtn.getAttribute("data-ask-mode"));
+        return;
+      }
+      if (!e.target.closest("#settings-pop") && !e.target.closest("#settings-btn")) {
+        setSettingsOpen(false);
+      }
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") setSettingsOpen(false);
+    });
+    syncAskModeUI();
+
     window.addEventListener("resize", function () { if (state) fitHand(); });
 
     window.__megaFish = {
@@ -1392,6 +1622,9 @@
       legalRanks: function (id) { return legalRanks(state, id || "you"); },
       collectSets: function (id) { return collectSets(state, id || "you"); },
       names: NAMES,
+      getAskMode: function () { return askMode; },
+      setAskMode: setAskMode,
+      setSettingsOpen: setSettingsOpen,
     };
 
     newGame();
